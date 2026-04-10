@@ -157,12 +157,17 @@ To decide which result is the (R - characteristic roll) roll for (P - a person) 
 		decide on special;
 	otherwise if rolled val <= effective value:
 		decide on success;
+	otherwise if effective value <= 10 and rolled val >= 96:
+		decide on fumble;
+	otherwise if effective value <= 30 and rolled val >= 97:
+		decide on fumble;
+	otherwise if effective value <= 50 and rolled val >= 98:
+		decide on fumble;
+	otherwise if effective value <= 70 and rolled val >= 99:
+		decide on fumble;
+	otherwise if rolled val is 100:
+		decide on fumble;
 	otherwise:
-		let N be the C value of P;
-		let RV be rolled val;
-		if (N <= 10 and RV >= 96) or (N <= 30 and RV >=97) or (N <= 50 and RV >= 98) or (N <= 70 and RV >= 99) or RV is 100:
-			decide on fumble;
-	otherwise if rolled val > effective value:
 		decide on failure.
 		
 To decide which result is the (R - characteristic roll) roll for (P - a person):
@@ -357,9 +362,17 @@ To decide which result is the (S - skill) result for (P - person) - (D - skill r
 		decide on special;
 	otherwise if rolled val <= effective skill:
 		decide on success;
-	otherwise if rolled val is 100: [TODO: Technically skill levels below 71 have more chances of fumbling]
+	otherwise if effective skill <= 10 and rolled val >= 96:
 		decide on fumble;
-	otherwise if rolled val > effective skill:
+	otherwise if effective skill <= 30 and rolled val >= 97:
+		decide on fumble;
+	otherwise if effective skill <= 50 and rolled val >= 98:
+		decide on fumble;
+	otherwise if effective skill <= 70 and rolled val >= 99:
+		decide on fumble;
+	otherwise if rolled val is 100:
+		decide on fumble;
+	otherwise:
 		decide on failure.
 		
 To decide which result is the (S - skill) result for (P - person):
@@ -455,16 +468,16 @@ Section 5 - Experience
 
 To give (P - a person) experience in (S - a skill):
 	if BRP verbosity is true:
-		say "\n[P] is rolling to gain experience in [S].";
+		say "[line break]Rolling for [the printed name of P] to gain experience in [S]." in sentence case;
 	let DR be the result of 1d100;
 	if DR > the S rating of P:
 		let points be the result of 1d6;
 		set the S rating of P to the S rating of P + points;
 		if BRP verbosity is true:
-			say "\n[P] gained [points] in [S].\n";
+			say "[line break][The printed name of P] gained [points] in [S], which is now in [the S rating of P].[line break]";
 	else:
 		if BRP verbosity is true:
-			say "\n[P] failed their d100 roll to increase experience in [S].\n".
+			say "[line break][The printed name of P] failed the d100 roll to increase experience in [S]: [DR] <= [the S rating of P].[line break]".
 
 Chapter 4 - Time
 
@@ -582,6 +595,11 @@ Assigning characteristic values to a person:
 	`set the (characteristic) value of (person) to (number)`
 	(characteristic) must be a member of the Table of Characteristics. Theoretically you can also extend this table, but supporting that use case is out of scope for this extension, so do so at your own risk.
 	An entry must already exist in the Table of Character Characteristics of the form "[printed name of person]-[characteristic][tab][number]"
+	
+Skill advancement:
+	`give (person) experience in (skill)`
+	(skill) must be a member of the Table of Skills.
+	Unlike some d100 systems, advancement is not automatic. As the game designer, you must choose when to perform skill advancement for the player (or other characters!).
 	
 Skill rolls:
 	(result): `the (skill) result for (person) - (difficulty)`
@@ -754,7 +772,8 @@ In packing all of these into a tiny demo, it also shows how even with just four 
 			now the dapper gentleman is bereft;
 		otherwise:
 			say "[300 secs]You summon your mental energy to try to lift [the creased ticket] from [the dapper gentleman]'s pocket, but he notices what's happening and quickly grabs it, looking about with a startled expression.";
-			set the Spot rating of the dapper gentleman to 35. [simulate heightened alertness]
+			repeat with i running from 1 to 2:
+				give the dapper gentleman experience in Spot. [simulate heightened alertness]
 	[ Persuading ]
 	[ Usually in BRP persuasion would make use of the Persuasion skill, but for the purpose of illustrating resistance rolls, we're making this a POW v POW resistance roll ]
 	Persuading is an action applying to one thing.
@@ -807,14 +826,16 @@ In packing all of these into a tiny demo, it also shows how even with just four 
 	A teal telekenesis pill is here. It is a pill.
 	Instead of eating a telekenesis pill:
 		[ You can use the skill syntax for your custom skills, too ]
-		Set the telekenesis rating of yourself to 60;
+		repeat with i running from 1 to 10:
+			give yourself experience in telekenesis;
 		Now the telekenesis pill is nowhere;
-		say "[5 secs]You feel you can move objects with your mind."
+		say "[5 secs]Years of experience flash before your eyes and you feel you can now move objects with your mind."
 	A red repair pill is here. It is a pill.
 	Instead of eating a repair pill:
-		Set the repair rating of yourself to 60;
+		repeat with i running from 1 to 10:
+			give yourself experience in repair;
 		Now the repair pill is nowhere;
-		say "[5 secs]You feel you understand the inner workings of every mechanical contraption."
+		say "[5 secs]Years of experience flash before your eyes and you feel you understand the inner workings of every mechanical contraption."
 		
 	Instead of giving a pill to someone:
 		say "[no-time]The rail authority takes a dim view of pill-pushing on company property."

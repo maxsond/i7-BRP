@@ -1,5 +1,5 @@
 Version 1.0.200001 of BRP by Daniel Maxson begins here.
-"Implements the ORC-Licensed Basic Roleplaying SRD from Chaosium Games"
+"Implements the ORC-Licensed Basic Roleplaying SRD from Chaosium Games."
 [The version numbering is a little strange because it's intended to follow the version numbering of the SRD that is implemented, with an additional level to allow for iteration of Inform implementation. But Inform versioning only allows for three levels of depth, so we pack the Inform implementation semantic version of the implementation into the "debug" level: 1 digit for major version, 2 digits for minor version, 2 digits for bugfix version. Ergo a 0.0.1 implementation of the 1.0.2 SRD is 1.0.2.0.0.1 -> 1.0.200001]
 
 

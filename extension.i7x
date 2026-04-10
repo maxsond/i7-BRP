@@ -582,8 +582,6 @@ BRP ends here.
 
 ---- DOCUMENTATION ----
 
-Implements the "Basic Roleplaying" SRD from Chaosium Games, which is the system powering their popular tabletop roleplaying games.
-
 The structure of the extension deliberately follows the structure of the SRD so implementation of features should be easy to find, but here's a summary of what is currently supported:
 
 Assigning skill ratings to a person:

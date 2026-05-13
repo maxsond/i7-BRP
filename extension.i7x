@@ -6,6 +6,9 @@ Version 1.0.200001 of BRP by Daniel Maxson begins here.
 [ VTC enables us to simulate the time different skill uses and combat take per the BRP rules]
 Include Variable Time Control by Eric Eve.
 
+[ Makes working with skills and characteristics of characters easier ]
+Include Collections by Dannii Willis.
+
 BRP Verbosity is initially true. [ This controls whether BRP rolls are shown while playing ]
 
 Chapter 0 - Preamble
@@ -248,7 +251,7 @@ Skill is a kind of value. The skills are defined by the Table of Skills.
 
 [TODO: Figure out what makes sense for skills based on characteristics]
 [The reason for the table rather than making skill a number is that we want to perform many operations involving skills (making skill rolls, contests, and so on), and we need to be able to reference skills by name, especially to enable games to extend the skill list and have all the skill mechanics work seamlessly with their new skills]
-Table of Skills	
+Table of Skills
 Skill	Skill Base Chance
 Appraise	15
 Art	5
@@ -259,24 +262,31 @@ Command	5
 Craft	5
 Demolition	1
 Disguise	1
+Dodge	0
 Drive	20
 Etiquette	5
 Fast Talk	5
 Fine Manipulation	5
 First Aid	30
+Fly	0
+Gaming	0
 Grapple	25
 Heavy Machine	1
 Hide	10
 Insight	5
 Jump	25
 Knowledge	5
+Language Own	0
+Language Other	0
 Listen	25
+Literacy	0
 Martial Arts	1
 Medicine	5
 Navigate	10
 Perform	5
 Persuade	15
 Pilot	1
+Projection	0
 Psychotherapy	1
 Repair	15
 Research	25
@@ -312,6 +322,27 @@ To decide which number is the (S - skill) level of (T - a thing):
 	say "<ERROR: You cannot get the skill level of a non-person.>";
 	decide on 0.
 
+A person can be naturally flying or technologically flying. A person is usually technologically flying.
+
+To decide which number is the base chance of (S - skill) for (P - a person):
+	if S is dodge: 
+		decide on the dexterity value of P * 2;
+	if S is gaming: 
+		decide on (the intelligence value of P) + (the power value of P);
+	if S is language own: 
+		decide on the intelligence value of P * 5;
+	if S is language other: 
+		decide on 0;
+	if S is literacy: 
+		decide on the intelligence value of P * 5;
+	if S is projection: 
+		decide on the dexterity value of P * 2;
+	if S is fly:
+		if P is naturally flying: 
+			decide on the dexterity value of P * 4;
+		decide on the dexterity value of P / 2;
+	decide on the skill base chance of S.
+
 To decide which number is the (S - skill) rating of (P - a person):
 	Let LP be "[P]-[S]";
 	Let T be the Table of Character Skills;
@@ -319,7 +350,7 @@ To decide which number is the (S - skill) rating of (P - a person):
 		choose the row with a CharacterSkill of LP in the Table of Character Skills;
 		decide on the Points entry;
 	otherwise:
-		decide on the skill base chance of S. [If the skill's not authored for the person, it's untrained]
+		decide on the base chance of S for P. [If the skill's not authored for the person, it's untrained]
 
 To increment the (S - skill) rating of (P - a person):
 	set the S rating of P to the S level of P + 1.
@@ -512,6 +543,8 @@ Section 4 - Skill Time
 
 Chapter 5 - Combat
 
+Using basic combat is initially true. [ This toggles whether to enable the actions in this chapter, so games or other extensions can provide their own combat actions that hook into this system. ]
+
 Section 1 - The Combat Round
 
 [ A combat round takes 12 seconds as implemented in section 4.3. ]
@@ -529,6 +562,24 @@ Section 2 - Statement of Intent
 	2. Ranged -> long weapons -> medium weapons -> short weapons / unarmed
 	3. The actor with the highest skill in the weapon they'll be using
 	4. Any ties at this point are resolved simultaneously ]
+
+The list of combatants is a list of people which varies.
+
+To add (P - a person) to the combat order:
+	let insertion point be 0;
+	repeat with I running from 1 to the number of entries in the list of combatants:
+		if insertion point is 0 and the dexterity value of P > the dexterity value of entry I of the list of combatants:
+			now insertion point is I;
+	if insertion point is 0:
+		add P to the list of combatants;
+	otherwise:
+		add P at entry insertion point in the list of combatants.
+
+Instead of attacking someone (called the target):
+	Now combat mode is true;
+	add target to the combat order;
+	add the player to the combat order.
+	
 
 Section 3 - Movement
 
@@ -588,6 +639,10 @@ Assigning skill ratings to a person:
 	set the (skill) rating of (person) to (number)`
 	(skill) must be a member of the Table of Skills. If you want custom skills in your game, just extend the table and your new skill will work automatically like every other skill.
 	An entry must already exist in the Table of Character Skills of the form "[printed name of person]-[skill][tab][number]"
+
+Attribute-derived skill base chances:
+	Several skills have base chances derived from character attributes rather than fixed values: Dodge (DEX×2), Gaming (INT+POW), Language Own (INT×5), Literacy (INT×5), Projection (DEX×2), Language Other (always 0). These are computed automatically from the character's attributes when no authored skill rating exists.
+	The Fly skill base depends on whether the character has natural flight (wings, etc.) or technological flight (jet pack, etc.). Use `now (person) is naturally flying` or `now (person) is technologically flying` to set this. The default is technological (DEX÷2). Natural flight uses DEX×4.
 	
 Assigning characteristic values to a person:
 	`set the (characteristic) value of (person) to (number)`
@@ -643,7 +698,18 @@ Acknowledgements:
 	Thank you to Climbingstars and Andrew Plotkin for helping work around an I7 bug in table traversal: https://intfiction.org/t/internal-error-when-using-dynamic-tables/77760/5
 	Thank you to the interactive fiction community past and present for providing the inspiration for this project.
 		
+Example: **** The Arena - Demonstrate basic combat
 
+	*: "The Arena"
+	
+	Include BRP by Daniel Maxson
+	
+	The Arena is a room. "You enter the arena, facing down a variety of combatants. The audience waits with bated breath for you to choose your adversary." 
+	
+	Bob the Goblin is here. He is a man. 
+	Archie the Archer is here. He is a man. 
+	Marge the Mage is here. She is a woman.
+	
 Example: **** Train Station - Demonstrate use of skills and characteristic rolls in a demo scene.
 
 This tiny demo game demonstrates the supported features of the SRD.
@@ -665,7 +731,7 @@ In packing all of these into a tiny demo, it also shows how even with just four 
 	The creased train ticket is a train ticket.
 	The pristine train ticket is a train ticket.
 	
-	The dapper gentleman is here. He is a man. "A dapper gentleman stands out from the crowd wearing a tuxedo, a top hat, and a monocle. All in all, exceptionally dapper. He is being worn by an even more dapper mustache![if the dapper gentleman is holding the creased train ticket] A creased train ticket sticks temptingly out of the tuxedo's left breast pocket. Perhaps you could PERSUADE him to give it to you. Or you could try to STEAL it.[else if the dapper gentleman is bereft] He is frantically scouring the platform for his ticket.[else if the dapper gentleman is annoyed] He paces the platform agitatedly.[end if]". The dapper gentleman can be calm or bereft. The dapper gentleman is calm.
+	The dapper gentleman is here. He is a man. "A dapper gentleman stands out from the crowd wearing a tuxedo, a top hat, and a monocle. All in all, exceptionally dapper. He is being worn by an even more dapper mustache![if the dapper gentleman is holding the creased train ticket] A creased train ticket sticks temptingly out of the tuxedo's left breast pocket. Perhaps you could PERSUADE him to give it to you, try to STEAL it, or challenge him to a GAMBLE.[else if the dapper gentleman is bereft] He is frantically scouring the platform for his ticket.[else if the dapper gentleman is annoyed] He paces the platform agitatedly.[end if]". The dapper gentleman can be calm or bereft. The dapper gentleman is calm.
 	Understand "man" as the dapper gentleman.
 	The dapper gentleman is holding the creased train ticket.
 	
@@ -809,6 +875,32 @@ In packing all of these into a tiny demo, it also shows how even with just four 
 				say "[600 secs]You make your case as convincingly as you can, but he directs you over to the ticket vending machine. He doesn't seem willing to give his ticket up."
 		
 		
+	[ Gambling ]
+	Gambling with is an action applying to one thing.
+	Understand "gamble with [someone]" as gambling with.
+	Understand "play cards with [someone]" as gambling with.
+
+	Check gambling with:
+		if the noun is not the dapper gentleman:
+			say "[no-time][The noun] has no interest in a wager.";
+			rule fails;
+		if the dapper gentleman is not carrying the creased train ticket:
+			say "[no-time]The dapper gentleman has nothing left to wager.";
+			rule fails.
+
+	Carry out gambling with the dapper gentleman:
+		let r be the result of a contest between the player using gaming and the dapper gentleman using gaming;
+		if r is contest won:
+			say "[300 secs]You propose a hand of cards and the dapper gentleman accepts with a sporting smile. After a tense exchange, fortune favors you and you win his train ticket fair and square!";
+			now the player is carrying the creased train ticket;
+			now the dapper gentleman is bereft;
+		otherwise if r is contest lost:
+			say "[300 secs]You propose a hand of cards. He accepts graciously, but outplays you with practiced ease, pocketing your ante with an apologetic tip of his hat.";
+		otherwise if r is contest tied:
+			say "[300 secs]After a long and tense hand, neither of you can claim victory. He returns your stake with a shrug. You could try again.";
+		otherwise:
+			say "[60 secs]You and the dapper gentleman cannot agree on which game to play. The proposal goes nowhere.".
+
 	A pill is a kind of thing.
 	
 	A strawberry strength pill is here. It is a pill.
@@ -870,6 +962,7 @@ In packing all of these into a tiny demo, it also shows how even with just four 
 	"yourself-Persuade"		15
 	"yourself-Repair"			15
 	"dapper gentleman-Spot" 	25
+	"dapper gentleman-Gaming"	45
 	
 	[ Since this demo alters a character's strength from the default, we need to author that characteristic so we can manipulate it ]
 	Table of Character Characteristics (continued)

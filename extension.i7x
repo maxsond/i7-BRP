@@ -387,38 +387,45 @@ Section 1 - Success or Failure?
 
 A result is a kind of value. The results are special, success, failure, and fumble.
 
-To decide which result is the (S - skill) result for (P - person) - (D - skill roll difficulty):
-	let rolled val be a random number from 1 to 100;
-	let effective skill be the effective S rating of P;
+To decide which result is a BRP roll of (N - number) labeled (L - text) for (P - person) - (D - skill roll difficulty):
+	if D is impossible:
+		decide on failure;
+	let rating be N;
 	if D is easy:
-		let effective skill be effective skill times 2;
+		let rating be rating * 2;
+	otherwise if D is very difficult:
+		let rating be rating / 4;
 	otherwise if D is difficult:
-		let effective skill be effective skill divided by 2;
+		let rating be rating / 2;
+	let rolled val be a random number from 1 to 100;
 	if BRP Verbosity is true:
-		say "[The printed name of P] rolled [rolled val] against an effective [S] value of [effective skill] (Difficulty: [D]).[paragraph break]"  in sentence case;
-	if rolled val <= 0.2 times effective skill:
+		say "[The printed name of P] rolled [rolled val] against an effective [L] value of [rating] (Difficulty: [D]).[paragraph break]" in sentence case;
+	if rolled val <= rating / 5:
 		decide on special;
-	otherwise if rolled val <= effective skill:
+	otherwise if rolled val <= rating:
 		decide on success;
-	otherwise if effective skill <= 10 and rolled val >= 96:
+	otherwise if rating <= 10 and rolled val >= 96:
 		decide on fumble;
-	otherwise if effective skill <= 30 and rolled val >= 97:
+	otherwise if rating <= 30 and rolled val >= 97:
 		decide on fumble;
-	otherwise if effective skill <= 50 and rolled val >= 98:
+	otherwise if rating <= 50 and rolled val >= 98:
 		decide on fumble;
-	otherwise if effective skill <= 70 and rolled val >= 99:
+	otherwise if rating <= 70 and rolled val >= 99:
 		decide on fumble;
 	otherwise if rolled val is 100:
 		decide on fumble;
 	otherwise:
 		decide on failure.
-		
+
+To decide which result is the (S - skill) result for (P - person) - (D - skill roll difficulty):
+	decide on a BRP roll of (the effective S rating of P) labeled "[S] skill" for P - D.
+
 To decide which result is the (S - skill) result for (P - person):
 	decide on the S result for P - normal.
 
 Section 2 - Skill Rolls
 
-A skill roll difficulty is a kind of value. The skill roll difficulties are easy, normal, and difficult.
+A skill roll difficulty is a kind of value. The skill roll difficulties are easy, normal, difficult, very difficult, and impossible.
 
 Section 3 - Skill vs Skill
 
@@ -504,18 +511,23 @@ Section 5 - Experience
 
 [Because in the TTRPG implementation this is given at the end of an adventure rather than every time the skill is used, this is left for the game designer to trigger at the time they deem appropriate for their game.]
 
-To give (P - a person) experience in (S - a skill):
+To decide which number is a BRP experience roll for (P - person) at (current - number) labeled (L - text):
 	if BRP verbosity is true:
-		say "[line break]Rolling for [the printed name of P] to gain experience in [S]." in sentence case;
+		say "[line break]Rolling for [the printed name of P] to gain experience in [L]." in sentence case;
 	let DR be the result of 1d100;
-	if DR > the S rating of P:
+	if DR > current:
 		let points be the result of 1d6;
-		set the S rating of P to the S rating of P + points;
 		if BRP verbosity is true:
-			say "[line break][The printed name of P] gained [points] in [S], which is now in [the S rating of P].[line break]";
-	else:
-		if BRP verbosity is true:
-			say "[line break][The printed name of P] failed the d100 roll to increase experience in [S]: [DR] <= [the S rating of P].[line break]".
+			say "[line break][The printed name of P] gained [points] in [L], which is now [current + points].[line break]";
+		decide on points;
+	if BRP verbosity is true:
+		say "[line break][The printed name of P] failed the d100 roll to increase experience in [L]: [DR] <= [current].[line break]";
+	decide on 0.
+
+To give (P - a person) experience in (S - a skill):
+	let gain be a BRP experience roll for P at (the S rating of P) labeled "[S] skill";
+	if gain > 0:
+		set the S rating of P to the S rating of P + gain.
 
 Chapter 4 - Time
 
@@ -601,6 +613,145 @@ Section 7 - Dodging
 Section 8 - Combat Summary
 
 Section 9 - Weapons and Damage
+
+A weapon specialty is a kind of value. The weapon specialties are defined by the Table of Weapon Specialties.
+
+Table of Weapon Specialties
+Weapon Specialty	Base Chance
+no weapon specialty	0
+axe	15
+club	25
+dagger	25
+hammer	25
+mace	25
+polearm	15
+spear	15
+staff	25
+sword	15
+bow	5
+crossbow	25
+sling	5
+throwing axe	10
+throwing dagger	15
+pistol	20
+rifle	25
+laser pistol	20
+laser rifle	15
+
+A weapon bonus type is a kind of value. The weapon bonus types are no weapon bonus, half weapon bonus, and full weapon bonus.
+
+A melee weapon type is a kind of value. The melee weapon types are defined by the Table of Melee Weapon Types.
+
+Table of Melee Weapon Types
+Melee Weapon Type	Specialty	Base	Damage Die	Flat Bonus	Hands	HP
+no melee weapon	axe	0	0d6	0	1	0
+battle axe	axe	15	1d8	2	1	15
+great axe	axe	15	2d6	2	2	15
+hand axe	axe	15	1d6	1	1	12
+heavy club	club	25	1d8	0	2	22
+light club	club	25	1d6	0	1	15
+dagger	dagger	25	1d4	0	1	15
+halberd	polearm	15	3d6	0	2	25
+hammer	hammer	25	1d6	0	1	15
+great hammer	hammer	25	1d10	3	2	15
+knife	dagger	25	1d3	1	1	15
+heavy mace	mace	25	1d8	2	2	10
+light mace	mace	25	1d6	2	1	6
+pike	polearm	15	1d10	2	2	12
+quarter staff	staff	25	1d8	0	2	8
+long spear	spear	15	1d10	0	2	10
+broad sword	sword	15	1d8	1	1	12
+great sword	sword	5	2d8	0	2	12
+short sword	sword	15	1d6	1	1	12
+
+A missile weapon type is a kind of value. The missile weapon types are defined by the Table of Missile Weapon Types.
+
+Table of Missile Weapon Types
+Missile Weapon Type	Specialty	Base	Damage Die	Flat Bonus	Bonus Type	Hands	HP	Range
+no missile weapon	no weapon specialty	0	0d6	0	no weapon bonus	1	0	0
+thrown hand axe	throwing axe	10	1d6	0	half weapon bonus	1	12	20
+long bow	bow	5	1d8	1	half weapon bonus	2	10	90
+heavy crossbow	crossbow	25	2d6	2	no weapon bonus	2	18	55
+light crossbow	crossbow	25	1d6	2	no weapon bonus	2	10	40
+thrown dagger	throwing dagger	15	1d4	0	half weapon bonus	1	15	10
+thrown knife	throwing dagger	15	1d3	1	half weapon bonus	1	10	10
+pistol	pistol	20	1d8	0	no weapon bonus	1	8	20
+laser pistol	laser pistol	20	1d8	0	no weapon bonus	1	14	20
+rifle	rifle	25	2d6	0	no weapon bonus	2	12	80
+laser rifle	laser rifle	15	2d8	0	no weapon bonus	2	20	100
+sling	sling	5	1d8	0	half weapon bonus	2	2	80
+thrown rock	no weapon specialty	0	1d2	0	half weapon bonus	1	0	20
+
+A melee weapon is a kind of thing.
+A melee weapon has a melee weapon type. The melee weapon type of a melee weapon is usually no melee weapon.
+
+A missile weapon is a kind of thing.
+A missile weapon has a missile weapon type. The missile weapon type of a missile weapon is usually no missile weapon.
+
+[ Character weapon specialties duplicate a lot of skill logic to enable game authors
+to extend the table and have their new weapon specialties "just work" ]
+Table of Character Weapon Specialties
+CharacterWeapon (text)	Points (number)
+--	--
+
+To decide which number is the (WS - weapon specialty) weapon specialty rating of (P - a person):
+	let LP be "[P]-[WS]";
+	if LP is a CharacterWeapon listed in Table of Character Weapon Specialties:
+		choose the row with a CharacterWeapon of LP in Table of Character Weapon Specialties;
+		decide on the Points entry;
+	otherwise:
+		choose the row with a weapon specialty of WS in Table of Weapon Specialties;
+		decide on the Base Chance entry.
+
+To set the (WS - weapon specialty) weapon specialty rating of (P - a person) to (N - number):
+	let LP be "[P]-[WS]";
+	if LP is a CharacterWeapon listed in Table of Character Weapon Specialties:
+		choose the row with a CharacterWeapon of LP in Table of Character Weapon Specialties;
+		now the Points entry is N;
+	otherwise:
+		say "Oh dear, something tried to set the [WS] weapon specialty of [P] to [N], but that character and weapon specialty pairing was not authored. Please contact your friendly local game developer and notify them of this bug."
+
+To give (P - a person) experience in (WS - weapon specialty) weapon specialty:
+	let gain be a BRP experience roll for P at (the WS weapon specialty rating of P) labeled "[WS] weapon specialty";
+	if gain > 0:
+		set the WS weapon specialty rating of P to the WS weapon specialty rating of P + gain.
+
+To decide which result is the (WS - weapon specialty) weapon specialty result for (P - person) - (D - skill roll difficulty):
+	decide on a BRP roll of (the WS weapon specialty rating of P) labeled "[WS] weapon specialty" for P - D.
+
+To decide which result is the (WS - weapon specialty) weapon specialty result for (P - person):
+	decide on the WS weapon specialty result for P - normal.
+
+To decide which number is the melee damage of (MWT - melee weapon type) for (A - a person):
+	choose the row with a melee weapon type of MWT in Table of Melee Weapon Types;
+	let base be the result of the Damage Die entry;
+	let total be base + the Flat Bonus entry + the damage bonus of A;
+	if total < 0:
+		decide on 0;
+	decide on total.
+
+To decide which number is the missile damage of (MWT - missile weapon type) for (A - a person):
+	choose the row with a missile weapon type of MWT in Table of Missile Weapon Types;
+	let base be the result of the Damage Die entry;
+	let total be base + the Flat Bonus entry;
+	if the Bonus Type entry is half weapon bonus:
+		now total is total + the damage bonus of A / 2;
+	otherwise if the Bonus Type entry is full weapon bonus:
+		now total is total + the damage bonus of A;
+	if total < 0:
+		decide on 0;
+	decide on total.
+
+To decide which skill roll difficulty is the range difficulty for (MWT - missile weapon type) at (D - number) meters:
+	choose the row with a missile weapon type of MWT in Table of Missile Weapon Types;
+	let R be the Range entry;
+	if D > R * 3:
+		decide on impossible;
+	if D > R * 2:
+		decide on very difficult;
+	if D > R:
+		decide on difficult;
+	decide on normal.
 
 Section 10 - Armor
 
@@ -695,43 +846,12 @@ To set the (ST - shield type) shield specialty rating of (P - a person) to (N - 
 		say "Oh dear, something tried to set the [ST] shield specialty of [P] to [N], but that character and shield specialty pairing was not authored. Please contact your friendly local game developer and notify them of this bug."
 
 To give (P - a person) experience in (ST - shield type) shield specialty:
-	if BRP verbosity is true:
-		say "[line break]Rolling for [the printed name of P] to gain experience in [ST] shield specialty." in sentence case;
-	let DR be the result of 1d100;
-	if DR > the ST shield specialty rating of P:
-		let points be the result of 1d6;
-		set the ST shield specialty rating of P to the ST shield specialty rating of P + points;
-		if BRP verbosity is true:
-			say "[line break][The printed name of P] gained [points] in [ST] shield specialty, which is now [the ST shield specialty rating of P].[line break]";
-	else:
-		if BRP verbosity is true:
-			say "[line break][The printed name of P] failed the d100 roll to increase experience in [ST] shield specialty: [DR] <= [the ST shield specialty rating of P].[line break]".
+	let gain be a BRP experience roll for P at (the ST shield specialty rating of P) labeled "[ST] shield specialty";
+	if gain > 0:
+		set the ST shield specialty rating of P to the ST shield specialty rating of P + gain.
 
 To decide which result is the (ST - shield type) shield specialty result for (P - person) - (D - skill roll difficulty):
-	let rolled val be a random number from 1 to 100;
-	let effective specialty be the ST shield specialty rating of P;
-	if D is easy:
-		let effective specialty be effective specialty times 2;
-	otherwise if D is difficult:
-		let effective specialty be effective specialty divided by 2;
-	if BRP Verbosity is true:
-		say "[The printed name of P] rolled [rolled val] against an effective [ST] shield specialty of [effective specialty] (Difficulty: [D]).[paragraph break]" in sentence case;
-	if rolled val <= 0.2 times effective specialty:
-		decide on special;
-	otherwise if rolled val <= effective specialty:
-		decide on success;
-	otherwise if effective specialty <= 10 and rolled val >= 96:
-		decide on fumble;
-	otherwise if effective specialty <= 30 and rolled val >= 97:
-		decide on fumble;
-	otherwise if effective specialty <= 50 and rolled val >= 98:
-		decide on fumble;
-	otherwise if effective specialty <= 70 and rolled val >= 99:
-		decide on fumble;
-	otherwise if rolled val is 100:
-		decide on fumble;
-	otherwise:
-		decide on failure.
+	decide on a BRP roll of (the ST shield specialty rating of P) labeled "[ST] shield specialty" for P - D.
 
 To decide which result is the (ST - shield type) shield specialty result for (P - person):
 	decide on the ST shield specialty result for P - normal.

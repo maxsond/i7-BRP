@@ -150,6 +150,11 @@ To decide which result is the (R - characteristic roll) roll for (P - a person) 
 	let rolled val be a random number from 1 to 100;
 	let C be the Characteristic of R;
 	let effective value be the C value of P * 5;
+	if R is agility:
+		repeat with A running through armor pieces worn by P:
+			now effective value is effective value + the physical skill modifier of A;
+		if effective value < 0:
+			now effective value is 0;
 	if D is easy:
 		let effective value be effective value times 2;
 	otherwise if D is difficult:
@@ -248,61 +253,61 @@ STRSIZ	Damage Modifier
 Section 6 - Skills
 
 Skill is a kind of value. The skills are defined by the Table of Skills.
+A skill category is a kind of value. The skill categories are physical skill, perception skill, and general skill.
 
-[TODO: Figure out what makes sense for skills based on characteristics]
 [The reason for the table rather than making skill a number is that we want to perform many operations involving skills (making skill rolls, contests, and so on), and we need to be able to reference skills by name, especially to enable games to extend the skill list and have all the skill mechanics work seamlessly with their new skills]
 Table of Skills
-Skill	Skill Base Chance
-Appraise	15
-Art	5
-Bargain	5
-Brawl	25
-Climb	40
-Command	5
-Craft	5
-Demolition	1
-Disguise	1
-Dodge	0
-Drive	20
-Etiquette	5
-Fast Talk	5
-Fine Manipulation	5
-First Aid	30
-Fly	0
-Gaming	0
-Grapple	25
-Heavy Machine	1
-Hide	10
-Insight	5
-Jump	25
-Knowledge	5
-Language Own	0
-Language Other	0
-Listen	25
-Literacy	0
-Martial Arts	1
-Medicine	5
-Navigate	10
-Perform	5
-Persuade	15
-Pilot	1
-Projection	0
-Psychotherapy	1
-Repair	15
-Research	25
-Ride	5
-Science	1
-Sense	10
-Sleight of Hand	5
-Spot	25
-Status	15
-Stealth	10
-Strategy	1
-Swim	25
-Teach	10
-Technical Skill	0
-Throw	25
-Track	10
+Skill	Skill Base Chance	Skill Category
+Appraise	15	general skill
+Art	5	general skill
+Bargain	5	general skill
+Brawl	25	general skill
+Climb	40	physical skill
+Command	5	general skill
+Craft	5	general skill
+Demolition	1	general skill
+Disguise	1	general skill
+Dodge	0	physical skill
+Drive	20	general skill
+Etiquette	5	general skill
+Fast Talk	5	general skill
+Fine Manipulation	5	physical skill
+First Aid	30	general skill
+Fly	0	general skill
+Gaming	0	general skill
+Grapple	25	general skill
+Heavy Machine	1	general skill
+Hide	10	physical skill
+Insight	5	general skill
+Jump	25	physical skill
+Knowledge	5	general skill
+Language Own	0	general skill
+Language Other	0	general skill
+Listen	25	perception skill
+Literacy	0	general skill
+Martial Arts	1	general skill
+Medicine	5	general skill
+Navigate	10	general skill
+Perform	5	general skill
+Persuade	15	general skill
+Pilot	1	general skill
+Projection	0	general skill
+Psychotherapy	1	general skill
+Repair	15	general skill
+Research	25	general skill
+Ride	5	general skill
+Science	1	general skill
+Sense	10	general skill
+Sleight of Hand	5	physical skill
+Spot	25	perception skill
+Status	15	general skill
+Stealth	10	physical skill
+Strategy	1	general skill
+Swim	25	physical skill
+Teach	10	general skill
+Technical Skill	0	general skill
+Throw	25	physical skill
+Track	10	general skill
 
 
 Table of Character Skills
@@ -382,7 +387,7 @@ A result is a kind of value. The results are special, success, failure, and fumb
 
 To decide which result is the (S - skill) result for (P - person) - (D - skill roll difficulty):
 	let rolled val be a random number from 1 to 100;
-	let effective skill be the S rating of P;
+	let effective skill be the effective S rating of P;
 	if D is easy:
 		let effective skill be effective skill times 2;
 	otherwise if D is difficult:
@@ -597,6 +602,56 @@ Section 9 - Weapons and Damage
 
 Section 10 - Armor
 
+An armor piece is a kind of thing. An armor piece is wearable.
+An armor piece has a number called armor points. The armor points of an armor piece is usually 0.
+An armor piece has a number called physical skill modifier. The physical skill modifier of an armor piece is usually 0.
+An armor piece has a number called perception skill modifier. The perception skill modifier of an armor piece is usually 0.
+
+Table of Armor Types
+Armor Name	AP	Physical Penalty	Perception Penalty
+"Bulletproof Vest"	8	-5	0
+"Chain"	7	-20	0
+"Flak Jacket"	4	-10	0
+"Clothing, Heavy"	1	0	0
+"Helmet, Heavy"	2	0	-50
+"Helmet, Light"	1	0	-15
+"Hoplite Panoply"	6	-20	0
+"Leather, Soft"	1	0	0
+"Leather, Hard"	2	-10	0
+"Plate, Full"	8	-25	0
+"Quilted"	2	-5	0
+"Riot Gear"	12	-10	0	[ SRD lists armor points as 12/6; 12 used here ]
+
+To initialize (A - armor piece) from the armor table as (T - text):
+	if T is an armor name listed in the Table of Armor Types:
+		choose the row with an armor name of T in Table of Armor Types;
+		now the armor points of A is the AP entry;
+		now the physical skill modifier of A is the physical penalty entry;
+		now the perception skill modifier of A is the perception penalty entry;
+	otherwise:
+		say "Error: '[T]' is not a recognized armor type in the Table of Armor Types.".
+
+To decide which number is the effective armor points of (P - a person):
+	let total be 0;
+	repeat with A running through armor pieces worn by P:
+		now total is total + the armor points of A;
+	decide on total.
+
+To decide which number is the effective (S - skill) rating of (P - a person):
+	let base be the S rating of P;
+	let modifier be 0;
+	let cat be the skill category of S;
+	if cat is physical skill:
+		repeat with A running through armor pieces worn by P:
+			now modifier is modifier + the physical skill modifier of A;
+	otherwise if cat is perception skill:
+		repeat with A running through armor pieces worn by P:
+			now modifier is modifier + the perception skill modifier of A;
+	let result be base + modifier;
+	if result < 0:
+		decide on 0;
+	decide on result.
+
 Section 11 - Shields
 
 Section 12 - Damage and Injury
@@ -639,6 +694,23 @@ Assigning skill ratings to a person:
 	set the (skill) rating of (person) to (number)`
 	(skill) must be a member of the Table of Skills. If you want custom skills in your game, just extend the table and your new skill will work automatically like every other skill.
 	An entry must already exist in the Table of Character Skills of the form "[printed name of person]-[skill][tab][number]"
+
+Armor:
+	Armor is represented as wearable things of kind `armor piece`. Each piece has three properties:
+		`armor points` - damage reduction (default 0)
+		`physical skill modifier` - penalty to physical skills (default 0, typically negative)
+		`perception skill modifier` - penalty to perception skills (default 0, typically negative)
+	The Table of Armor Types contains the SRD armor data. Initialize a piece from it:
+		`initialize (armor piece) from the armor table as (text)`
+		e.g. `initialize the chain hauberk from the armor table as "Chain"`
+	Or set properties directly: `now the armor points of the leather jacket is 1`.
+	Effective armor points (summed across all worn pieces):
+		`the effective armor points of (person)`
+	Skill rolls automatically apply armor modifiers. Physical skills (Climb, Dodge, Hide, etc.)
+	are penalized by physical skill modifiers; perception skills (Listen, Spot) by perception
+	skill modifiers. The Agility characteristic roll is also penalized by physical modifiers.
+	Effective skill rating (base rating plus worn armor modifiers, floored at 0):
+		`the effective (skill) rating of (person)`
 
 Attribute-derived skill base chances:
 	Several skills have base chances derived from character attributes rather than fixed values: Dodge (DEX×2), Gaming (INT+POW), Language Own (INT×5), Literacy (INT×5), Projection (DEX×2), Language Other (always 0). These are computed automatically from the character's attributes when no authored skill rating exists.

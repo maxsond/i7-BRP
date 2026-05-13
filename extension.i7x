@@ -651,6 +651,106 @@ To decide which number is the effective (S - skill) rating of (P - a person):
 
 Section 11 - Shields
 
+A shield type is a kind of value. The shield types are defined by the Table of Shield Types.
+
+Table of Shield Types
+Shield Type	HP	Shield Die	Missile Parry Chance	Base Rating
+no shield	0	0d6	0	0
+heater	12	1d3	30	15
+hoplite	16	1d4	60	15
+kite	16	1d4	30	15
+riot	16	1d3	60	15
+round	12	1d3	30	15
+target	12	1d2	15	15
+
+A shield is a kind of thing. A shield is wearable.
+A shield has a shield type. The shield type of a shield is usually no shield.
+
+Check wearing (S - a shield):
+	if a shield (called current shield) is worn by the actor:
+		say "[The actor] is already using [the current shield] as a shield.";
+		stop the action.
+
+[ Character shield specialties duplicate a lot of skill logic to enable game authors
+to extend the table and have their new shield types "just work" ]
+Table of Character Shield Specialties
+CharacterShield (text)	Points (number)
+--	--
+
+To decide which number is the (ST - shield type) shield specialty rating of (P - a person):
+	let LP be "[P]-[ST]";
+	if LP is a CharacterShield listed in Table of Character Shield Specialties:
+		choose the row with a CharacterShield of LP in the Table of Character Shield Specialties;
+		decide on the Points entry;
+	otherwise:
+		choose the row with a shield type of ST in the Table of Shield Types;
+		decide on the base rating entry.
+
+To set the (ST - shield type) shield specialty rating of (P - a person) to (N - number):
+	let LP be "[P]-[ST]";
+	if LP is a CharacterShield listed in Table of Character Shield Specialties:
+		choose the row with a CharacterShield of LP in the Table of Character Shield Specialties;
+		now the Points entry is N;
+	otherwise:
+		say "Oh dear, something tried to set the [ST] shield specialty of [P] to [N], but that character and shield specialty pairing was not authored. Please contact your friendly local game developer and notify them of this bug."
+
+To give (P - a person) experience in (ST - shield type) shield specialty:
+	if BRP verbosity is true:
+		say "[line break]Rolling for [the printed name of P] to gain experience in [ST] shield specialty." in sentence case;
+	let DR be the result of 1d100;
+	if DR > the ST shield specialty rating of P:
+		let points be the result of 1d6;
+		set the ST shield specialty rating of P to the ST shield specialty rating of P + points;
+		if BRP verbosity is true:
+			say "[line break][The printed name of P] gained [points] in [ST] shield specialty, which is now [the ST shield specialty rating of P].[line break]";
+	else:
+		if BRP verbosity is true:
+			say "[line break][The printed name of P] failed the d100 roll to increase experience in [ST] shield specialty: [DR] <= [the ST shield specialty rating of P].[line break]".
+
+To decide which result is the (ST - shield type) shield specialty result for (P - person) - (D - skill roll difficulty):
+	let rolled val be a random number from 1 to 100;
+	let effective specialty be the ST shield specialty rating of P;
+	if D is easy:
+		let effective specialty be effective specialty times 2;
+	otherwise if D is difficult:
+		let effective specialty be effective specialty divided by 2;
+	if BRP Verbosity is true:
+		say "[The printed name of P] rolled [rolled val] against an effective [ST] shield specialty of [effective specialty] (Difficulty: [D]).[paragraph break]" in sentence case;
+	if rolled val <= 0.2 times effective specialty:
+		decide on special;
+	otherwise if rolled val <= effective specialty:
+		decide on success;
+	otherwise if effective specialty <= 10 and rolled val >= 96:
+		decide on fumble;
+	otherwise if effective specialty <= 30 and rolled val >= 97:
+		decide on fumble;
+	otherwise if effective specialty <= 50 and rolled val >= 98:
+		decide on fumble;
+	otherwise if effective specialty <= 70 and rolled val >= 99:
+		decide on fumble;
+	otherwise if rolled val is 100:
+		decide on fumble;
+	otherwise:
+		decide on failure.
+
+To decide which result is the (ST - shield type) shield specialty result for (P - person):
+	decide on the ST shield specialty result for P - normal.
+
+To decide which number is the missile parry chance of (P - a person):
+	if a shield (called S) is worn by P:
+		let ST be the shield type of S;
+		choose the row with a shield type of ST in the Table of Shield Types;
+		decide on the missile parry chance entry;
+	decide on 0.
+
+To decide which number is the shield damage of (P - a person):
+	if a shield (called S) is worn by P:
+		let ST be the shield type of S;
+		choose the row with a shield type of ST in the Table of Shield Types;
+		let base damage be the result of the shield die entry;
+		decide on base damage + the damage bonus of P;
+	decide on 0.
+
 Section 12 - Damage and Injury
 
 Section 13 - Special Successes
@@ -708,6 +808,37 @@ Armor:
 	(Listen, Spot) are penalized by the perception penalty. All lookups are done at roll time.
 	To get the effective skill rating of a person (base rating plus worn armor modifiers, floored at 0):
 		`the effective (skill) rating of (person)`
+
+Shields:
+	Shields are represented as wearable things of kind `shield`. Each shield has one property:
+		`shield type` - a value of kind `shield type` (default: no shield)
+	`shield type` is a kind of value defined by the Table of Shield Types, which lists all SRD
+	shields along with their HP, damage die, missile parry chance, and base specialty rating.
+	A person can wear at most one shield; attempting to wear a second will fail with a message.
+	To create a shield:
+		`The heater shield is a shield. The shield type of the heater shield is heater.`
+	For custom shields, add a row to the Table of Shield Types. Shield specialty mechanics
+	automatically apply to any shield type in the table.
+	The SRD shield types are:
+		no shield, heater, hoplite, kite, riot, round, target
+
+	Each shield type has its own specialty rating, tracked in the Table of Character Shield
+	Specialties (not in the Table of Skills). To author a character's specialty, add an entry:
+		Table of Character Shield Specialties (continued)
+		CharacterShield          Points
+		"Brunhilde-heater"       15
+	Shield specialty rolls use the same result kind (special, success, failure, fumble) and
+	difficulty kind (easy, normal, difficult) as skill rolls.
+	To set a specialty rating:
+		`set the (shield type) shield specialty rating of (person) to (number)`
+	To make a specialty roll:
+		`the (shield type) shield specialty result for (person) - (difficulty)`
+	To give specialty experience (same 1d6 advancement mechanic as skills):
+		`give (person) experience in (shield type) shield specialty`
+	To get a person's missile parry chance (0 if no shield is worn):
+		`the missile parry chance of (person)`
+	To get a person's shield damage (shield die from table plus damage bonus, 0 if no shield worn):
+		`the shield damage of (person)`
 
 Attribute-derived skill base chances:
 	Several skills have base chances derived from character attributes rather than fixed values: Dodge (DEX×2), Gaming (INT+POW), Language Own (INT×5), Literacy (INT×5), Projection (DEX×2), Language Other (always 0). These are computed automatically from the character's attributes when no authored skill rating exists.

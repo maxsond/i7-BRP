@@ -724,7 +724,7 @@ In packing all of these into a tiny demo, it also shows how even with just four 
 	The creased train ticket is a train ticket.
 	The pristine train ticket is a train ticket.
 	
-	The dapper gentleman is here. He is a man. "A dapper gentleman stands out from the crowd wearing a tuxedo, a top hat, and a monocle. All in all, exceptionally dapper. He is being worn by an even more dapper mustache![if the dapper gentleman is holding the creased train ticket] A creased train ticket sticks temptingly out of the tuxedo's left breast pocket. Perhaps you could PERSUADE him to give it to you. Or you could try to STEAL it.[else if the dapper gentleman is bereft] He is frantically scouring the platform for his ticket.[else if the dapper gentleman is annoyed] He paces the platform agitatedly.[end if]". The dapper gentleman can be calm or bereft. The dapper gentleman is calm.
+	The dapper gentleman is here. He is a man. "A dapper gentleman stands out from the crowd wearing a tuxedo, a top hat, and a monocle. All in all, exceptionally dapper. He is being worn by an even more dapper mustache![if the dapper gentleman is holding the creased train ticket] A creased train ticket sticks temptingly out of the tuxedo's left breast pocket. Perhaps you could PERSUADE him to give it to you, try to STEAL it, or challenge him to a GAMBLE.[else if the dapper gentleman is bereft] He is frantically scouring the platform for his ticket.[else if the dapper gentleman is annoyed] He paces the platform agitatedly.[end if]". The dapper gentleman can be calm or bereft. The dapper gentleman is calm.
 	Understand "man" as the dapper gentleman.
 	The dapper gentleman is holding the creased train ticket.
 	
@@ -868,6 +868,32 @@ In packing all of these into a tiny demo, it also shows how even with just four 
 				say "[600 secs]You make your case as convincingly as you can, but he directs you over to the ticket vending machine. He doesn't seem willing to give his ticket up."
 		
 		
+	[ Gambling ]
+	Gambling with is an action applying to one thing.
+	Understand "gamble with [someone]" as gambling with.
+	Understand "play cards with [someone]" as gambling with.
+
+	Check gambling with:
+		if the noun is not the dapper gentleman:
+			say "[no-time][The noun] has no interest in a wager.";
+			rule fails;
+		if the dapper gentleman is not carrying the creased train ticket:
+			say "[no-time]The dapper gentleman has nothing left to wager.";
+			rule fails.
+
+	Carry out gambling with the dapper gentleman:
+		let r be the result of a contest between the player using gaming and the dapper gentleman using gaming;
+		if r is contest won:
+			say "[300 secs]You propose a hand of cards and the dapper gentleman accepts with a sporting smile. After a tense exchange, fortune favors you and you win his train ticket fair and square!";
+			now the player is carrying the creased train ticket;
+			now the dapper gentleman is bereft;
+		otherwise if r is contest lost:
+			say "[300 secs]You propose a hand of cards. He accepts graciously, but outplays you with practiced ease, pocketing your ante with an apologetic tip of his hat.";
+		otherwise if r is contest tied:
+			say "[300 secs]After a long and tense hand, neither of you can claim victory. He returns your stake with a shrug. You could try again.";
+		otherwise:
+			say "[60 secs]You and the dapper gentleman cannot agree on which game to play. The proposal goes nowhere.".
+
 	A pill is a kind of thing.
 	
 	A strawberry strength pill is here. It is a pill.
@@ -929,6 +955,7 @@ In packing all of these into a tiny demo, it also shows how even with just four 
 	"yourself-Persuade"		15
 	"yourself-Repair"			15
 	"dapper gentleman-Spot" 	25
+	"dapper gentleman-Gaming"	45
 	
 	[ Since this demo alters a character's strength from the default, we need to author that characteristic so we can manipulate it ]
 	Table of Character Characteristics (continued)

@@ -325,14 +325,21 @@ To decide which number is the (S - skill) level of (T - a thing):
 A person can be naturally flying or technologically flying. A person is usually technologically flying.
 
 To decide which number is the base chance of (S - skill) for (P - a person):
-	if S is dodge: decide on the dexterity value of P * 2;
-	if S is gaming: decide on (the intelligence value of P) + (the power value of P);
-	if S is language own: decide on the intelligence value of P * 5;
-	if S is language other: decide on 0;
-	if S is literacy: decide on the intelligence value of P * 5;
-	if S is projection: decide on the dexterity value of P * 2;
+	if S is dodge: 
+		decide on the dexterity value of P * 2;
+	if S is gaming: 
+		decide on (the intelligence value of P) + (the power value of P);
+	if S is language own: 
+		decide on the intelligence value of P * 5;
+	if S is language other: 
+		decide on 0;
+	if S is literacy: 
+		decide on the intelligence value of P * 5;
+	if S is projection: 
+		decide on the dexterity value of P * 2;
 	if S is fly:
-		if P is naturally flying: decide on the dexterity value of P * 4;
+		if P is naturally flying: 
+			decide on the dexterity value of P * 4;
 		decide on the dexterity value of P / 2;
 	decide on the skill base chance of S.
 

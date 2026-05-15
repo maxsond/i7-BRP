@@ -609,6 +609,19 @@ To add (P - a person) to the combat order:
 	otherwise:
 		add P at entry insertion point in the list of combatants.
 
+The distance query source is a thing that varies.
+The distance query target is a thing that varies.
+
+The get combat distance rules is a rulebook producing a number.
+
+Last get combat distance rule (this is the default combat distance rule):
+	rule succeeds with result 3.
+
+To decide which number is the combat distance between (A - a thing) and (B - a thing):
+	now the distance query source is A;
+	now the distance query target is B;
+	decide on the number produced by the get combat distance rules.
+
 Instead of attacking someone when using basic combat is true:
 	say "Specify a weapon: try 'attack [the noun] with [italic type]weapon[roman type]' or 'attack [the noun] unarmed'."
 
@@ -629,6 +642,11 @@ Check attacking it with (this is the weapon type check rule):
 		say "[The second noun] has no weapon type assigned." instead;
 	if the second noun is a missile weapon and the missile weapon type of the second noun is nil missile weapon:
 		say "[The second noun] has no weapon type assigned." instead.
+
+Check attacking it with (this is the melee range check rule):
+	if the second noun is a melee weapon:
+		if the combat distance between the player and the noun > 3:
+			say "[The noun] is too far away to reach with [the second noun]." instead.
 
 Reporting an attack result is an activity.
 The attack report attacker is a person that varies.
@@ -876,6 +894,10 @@ To decide which skill roll difficulty is the range difficulty for (MWT - missile
 	if D > R:
 		decide on difficult;
 	decide on normal.
+
+To decide which number is the range of (MWT - missile weapon type):
+	choose the row with a missile weapon type of MWT in Table of Missile Weapon Types;
+	decide on the Range entry.
 
 To decide which number is the special success melee damage of (MWT - melee weapon type) for (A - a person):
 	choose the row with a melee weapon type of MWT in Table of Melee Weapon Types;
@@ -1259,6 +1281,24 @@ Attacking:
 	Override the default messages by adding a `for reporting damage applied` rule:
 		For reporting damage applied:
 			say "[damage report net damage] point[s] of damage to [the damage report target]."
+
+Combat Distance:
+	The extension determines how far apart two combatants are via the `get combat distance rules` rulebook,
+	which produces a number in meters. To query the distance between any two things:
+		`the combat distance between (thing A) and (thing B)`
+
+	By default the rulebook returns 3 meters, placing all combatants within melee range. This is the
+	correct assumption for most text adventure encounters, where everyone is in the same room.
+
+	To model real distances in your game, add an earlier rule to the rulebook. For example, to place
+	one NPC at a fixed distance:
+		A get combat distance rule when the distance query target is the distant archer:
+			rule succeeds with result 50.
+
+	The context variables `distance query source` and `distance query target` are set immediately
+	before the rulebook fires, so your rules can read them to compute distance however suits your
+	game: room adjacency, a coordinate table, a relation, or any other mechanism. Rules that do not
+	fire fall through to the default 3-meter result.
 
 Attribute-derived skill base chances:
 	Several skills have base chances derived from character attributes rather than fixed values: Dodge (DEX×2), Gaming (INT+POW), Language Own (INT×5), Literacy (INT×5), Projection (DEX×2), Language Other (always 0). These are computed automatically from the character's attributes when no authored skill rating exists.

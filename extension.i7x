@@ -794,6 +794,21 @@ To decide whether (defender - a person) attempts to defend against the attack by
 		otherwise:
 			decide on whether or not the defender successfully dodges the attack by the attacker.
 
+To resolve the combat round:
+	sort the combat order by weapon priority;
+	repeat with I running from 1 to the number of entries in the list of combatants:
+		let C be entry I of the list of combatants;
+		if C is not conscious, next;
+		if C is the player:
+			execute an attack by the player against the noun with the current round player weapon;
+		otherwise:
+			follow the npc combat intent rules for C;
+			let T be the npc action target;
+			if T is nothing, next;
+			if T is a person (called P):
+				if P is not conscious, next;
+			execute an attack by C against T with the npc action weapon.
+
 Instead of attacking someone when using basic combat is true:
 	say "Specify a weapon: try 'attack [the noun] with [italic type]weapon[roman type]' or 'attack [the noun] unarmed'."
 
@@ -828,14 +843,68 @@ The attack report result is a result that varies.
 The attack report raw damage is a number that varies.
 
 Last for reporting an attack result:
-	if the attack report result is special:
-		say "You strike [the attack report target] with an exceptional blow! ";
-	otherwise if the attack report result is success:
-		say "You hit [the attack report target]. ";
-	otherwise if the attack report result is failure:
-		say "Your attack misses [the attack report target].";
+	let A be the attack report attacker;
+	if A is the player:
+		if the attack report result is special:
+			say "You strike [the attack report target] with an exceptional blow! ";
+		otherwise if the attack report result is success:
+			say "You hit [the attack report target]. ";
+		otherwise if the attack report result is failure:
+			say "Your attack misses [the attack report target].";
+		otherwise:
+			say "You fumble your attack!";
 	otherwise:
-		say "You fumble your attack!".
+		if the attack report result is special:
+			say "[The A] strikes [the attack report target] with an exceptional blow! ";
+		otherwise if the attack report result is success:
+			say "[The A] hits [the attack report target]. ";
+		otherwise if the attack report result is failure:
+			say "[The A] misses [the attack report target].";
+		otherwise:
+			say "[The A] fumbles their attack!".
+
+To execute an attack by (A - a person) against (T - a thing) with (W - an object):
+	let R be failure;
+	if W is a melee weapon (called MW):
+		let WS be the weapon type specialty of MW;
+		now R is the WS weapon specialty result for A;
+	otherwise if W is a missile weapon (called MSW):
+		let WS be the weapon type specialty of MSW;
+		now R is the WS weapon specialty result for A;
+	otherwise:
+		now R is the Brawl result for A;
+	now the attack report attacker is A;
+	now the attack report target is T;
+	now the attack report weapon is W;
+	now the attack report result is R;
+	if R is special or R is success:
+		let attack negated be false;
+		if T is a person (called the defender):
+			if the defender attempts to defend against the attack by A with W:
+				now attack negated is true;
+		if attack negated is false:
+			let damage be 0;
+			if W is nothing:
+				if R is special: now damage is the special unarmed damage of A;
+				otherwise: now damage is the unarmed damage of A;
+			otherwise if W is a melee weapon (called MT):
+				if R is special: now damage is the special attack damage of MT by A;
+				otherwise: now damage is the attack damage of MT by A;
+			otherwise if W is a missile weapon (called MS):
+				if R is special: now damage is the special attack damage of MS by A;
+				otherwise: now damage is the attack damage of MS by A;
+			now the attack report raw damage is damage;
+			carry out the reporting an attack result activity;
+			apply damage points of damage to T;
+	otherwise if R is failure:
+		now the attack report raw damage is 0;
+		carry out the reporting an attack result activity;
+	otherwise:
+		now the attack report raw damage is 0;
+		carry out the reporting an attack result activity;
+		now the fumble context weapon is W;
+		now the fumble context attacker is A;
+		follow the attacking fumble rules.
 
 Carry out attacking it with (this is the weapon attack rule):
 	if the player is not listed in the list of combatants:
@@ -843,35 +912,8 @@ Carry out attacking it with (this is the weapon attack rule):
 			add the target to the combat order;
 		add the player to the combat order;
 		enable combat mode;
-	let WS be nil specialty;
-	if the second noun is a melee weapon (called MW):
-		now WS is the weapon type specialty of MW;
-	otherwise if the second noun is a missile weapon (called MSW):
-		now WS is the weapon type specialty of MSW;
-	let R be the WS weapon specialty result for the player;
-	now the attack report attacker is the player;
-	now the attack report target is the noun;
-	now the attack report weapon is the second noun;
-	now the attack report result is R;
-	if R is special:
-		let SD be the special attack damage of the second noun by the player;
-		now the attack report raw damage is SD;
-		carry out the reporting an attack result activity;
-		apply SD points of damage to the noun;
-	otherwise if R is success:
-		let ND be the attack damage of the second noun by the player;
-		now the attack report raw damage is ND;
-		carry out the reporting an attack result activity;
-		apply ND points of damage to the noun;
-	otherwise if R is failure:
-		now the attack report raw damage is 0;
-		carry out the reporting an attack result activity;
-	otherwise:
-		now the attack report raw damage is 0;
-		carry out the reporting an attack result activity;
-		now the fumble context weapon is the second noun;
-		now the fumble context attacker is the player;
-		follow the attacking fumble rules.
+	now the current round player weapon is the second noun;
+	resolve the combat round.
 
 Unarmed attacking is an action applying to one visible thing.
 Understand "attack [someone] unarmed" as unarmed attacking.
@@ -882,30 +924,8 @@ Carry out unarmed attacking (this is the unarmed attack rule):
 			add the target to the combat order;
 		add the player to the combat order;
 		enable combat mode;
-	let R be the Brawl result for the player;
-	now the attack report attacker is the player;
-	now the attack report target is the noun;
-	now the attack report weapon is nothing;
-	now the attack report result is R;
-	if R is special:
-		let SD be the special unarmed damage of the player;
-		now the attack report raw damage is SD;
-		carry out the reporting an attack result activity;
-		apply SD points of damage to the noun;
-	otherwise if R is success:
-		let ND be the unarmed damage of the player;
-		now the attack report raw damage is ND;
-		carry out the reporting an attack result activity;
-		apply ND points of damage to the noun;
-	otherwise if R is failure:
-		now the attack report raw damage is 0;
-		carry out the reporting an attack result activity;
-	otherwise:
-		now the attack report raw damage is 0;
-		carry out the reporting an attack result activity;
-		now the fumble context weapon is nothing;
-		now the fumble context attacker is the player;
-		follow the attacking fumble rules.
+	now the current round player weapon is nothing;
+	resolve the combat round.
 
 [ Fumble hook: set fumble context weapon and fumble context attacker before the rules fire. ]
 The attacking fumble rules is a rulebook.
@@ -1643,7 +1663,58 @@ Example: **** The Arena - Demonstrate basic combat
 	Archie the Archer is wearing a worn shortbow, an archer's leather tunic, and an archer's leather boots.
 	Marge the Mage is here. She is a woman.
 	A lumberjack axe is a melee weapon. The melee weapon type of a lumberjack axe is hand axe. A lumberjack axe is here.
-	
+
+	When play begins:
+		set the dexterity value of Bob the Goblin to 15;
+		set the dexterity value of Archie the Archer to 12;
+		set the dexterity value of yourself to 10.
+
+	[ TEST CASES (manually verify):
+
+	  1. NPC acts first (Bob DEX 15 > player DEX 10):
+	     Give the player a melee weapon. > attack bob the goblin with [weapon]
+	     Expected: Bob attacks first, player's parry or dodge fires automatically per stance.
+	               Player's attack resolves after.
+
+	  2. Player acts first:
+	     Set player DEX to 20, Bob DEX to 10.
+	     Expected: Player's attack resolves first; Bob counter-attacks after.
+
+	  3. NPC dies from player's blow:
+	     Player acts first, one-shots Bob.
+	     Expected: Bob's turn is skipped silently after death.
+
+	  4. NPC with no weapon (remove goblin spear):
+	     Expected: Bob attacks unarmed (Brawl roll, 1d3 + damage bonus).
+
+	  5. Parry success — player in parry stance with a melee weapon:
+	     Player is in parry stance (default) and carrying a melee weapon. Bob attacks.
+	     Expected: Parry roll fires automatically; on success, no damage applied.
+
+	  6. Dodge stance:
+	     > dodge, then > attack bob the goblin with [weapon].
+	     Expected: When Bob counter-attacks, dodge roll fires automatically instead of parry.
+
+	  7. Parry stance with no weapon — auto-fallback to dodge:
+	     Player is in parry stance but carrying nothing. Bob attacks.
+	     Expected: No parry attempted; dodge roll fires automatically.
+
+	  8. Missile parry requires shield:
+	     Player has no shield. > attack archie the archer with [weapon] (bring Archie into combat).
+	     Expected: When Archie counter-attacks, no parry attempted; dodge roll fires automatically.
+
+	  9. NPC auto-defence:
+	     Player acts first (player DEX 20). Archie has shortbow.
+	     Expected: After player attacks, Archie's defence roll fires automatically.
+
+	  10. Within-DEX sub-ordering (Bob spear DEX 12, Archie bow DEX 12):
+	      Set both to DEX 12. Both in list of combatants. Both attack player.
+	      Expected: Archie (missile, priority 1) acts before Bob (long melee, priority 2).
+
+	  11. Second round (no intent carry-over):
+	      After round 1 resolves, > attack bob the goblin with [weapon] again.
+	      Expected: Fresh round; all positions and states intact. ]
+
 Example: **** Train Station - Demonstrate use of skills and characteristic rolls in a demo scene.
 
 This tiny demo game demonstrates the supported features of the SRD.

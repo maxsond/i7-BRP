@@ -631,6 +631,23 @@ The current round player weapon is an object that varies.
 The npc action target is a thing that varies.
 The npc action weapon is an object that varies.
 
+Defensive stance is a kind of value. The defensive stances are parry stance, dodge stance, and undefended stance.
+A person has a defensive stance. A person is usually parry stance.
+
+Adopting parry stance is an action applying to nothing.
+Understand "parry" as adopting parry stance.
+
+Carry out adopting parry stance:
+	now the defensive stance of the player is parry stance;
+	say "You ready yourself to parry incoming attacks."
+
+Adopting dodge stance is an action applying to nothing.
+Understand "dodge" as adopting dodge stance.
+
+Carry out adopting dodge stance:
+	now the defensive stance of the player is dodge stance;
+	say "You ready yourself to dodge incoming attacks."
+
 The npc combat intent rules is a rulebook operating on a person.
 
 Last npc combat intent rule for a person (called the NPC) when using basic combat is true
@@ -746,6 +763,36 @@ To sort the combat order by weapon priority:
 			now entry J of the list of combatants is entry (J - 1) of the list of combatants;
 			now J is J - 1;
 		now entry J of the list of combatants is C.
+
+To decide whether (defender - a person) attempts to defend against the attack by (attacker - a person)
+	with (W - an object):
+	if defender is the player:
+		if the defensive stance of the player is undefended stance: decide no;
+		if the defensive stance of the player is dodge stance:
+			decide on whether or not the player successfully dodges the attack by the attacker;
+		[ Parry stance: try parry, fall back to dodge if no eligible weapon/shield ]
+		if the player successfully parries the attack by the attacker with W:
+			decide yes;
+		decide on whether or not the player successfully dodges the attack by the attacker;
+	[ NPC: choose by comparing best available defense rating ]
+	let dodge rating be the effective Dodge rating of the defender;
+	if W is a missile weapon:
+		if the missile parry chance of the defender >= dodge rating:
+			decide on whether or not the defender successfully parries the attack by the attacker with W;
+		otherwise:
+			decide on whether or not the defender successfully dodges the attack by the attacker;
+	otherwise:
+		let best parry rating be 0;
+		repeat with PW running through things carried by the defender:
+			if PW is a melee weapon:
+				if the melee weapon type of PW is not nil melee weapon:
+					let WS be the weapon type specialty of PW;
+					let rating be the WS weapon specialty rating of the defender;
+					if rating > best parry rating: now best parry rating is rating;
+		if best parry rating >= dodge rating and best parry rating > 0:
+			decide on whether or not the defender successfully parries the attack by the attacker with W;
+		otherwise:
+			decide on whether or not the defender successfully dodges the attack by the attacker.
 
 Instead of attacking someone when using basic combat is true:
 	say "Specify a weapon: try 'attack [the noun] with [italic type]weapon[roman type]' or 'attack [the noun] unarmed'."
@@ -875,7 +922,79 @@ To decide which weapon specialty is the weapon type specialty of (W - a missile 
 
 Section 6 - Parrying
 
+Reporting a parry result is an activity.
+The parry report defender is a person that varies.
+The parry report attacker is a person that varies.
+The parry report result is a result that varies.
+
+Last for reporting a parry result:
+	if the parry report result is special or the parry report result is success:
+		if the parry report defender is the player:
+			say "You parry [the parry report attacker]'s attack!";
+		otherwise:
+			say "[The parry report defender] parries your attack!";
+	otherwise:
+		if the parry report defender is the player:
+			say "You fail to parry [the parry report attacker]'s attack!";
+		otherwise:
+			say "[The parry report defender] fails to parry your attack!".
+
+To decide whether (defender - a person) successfully parries the attack by (attacker - a person)
+	with (W - an object):
+	let R be failure;
+	if W is a missile weapon:
+		if the missile parry chance of the defender is 0: decide no;
+		now R is a BRP roll of (the missile parry chance of the defender)
+			labeled "missile parry" for the defender - normal;
+	otherwise:
+		let best weapon be nothing;
+		let best rating be 0;
+		repeat with PW running through things carried by the defender:
+			if PW is a melee weapon:
+				if the melee weapon type of PW is not nil melee weapon:
+					let WS be the weapon type specialty of PW;
+					let rating be the WS weapon specialty rating of the defender;
+					if rating > best rating:
+						now best rating is rating;
+						now best weapon is PW;
+		if best weapon is nothing: decide no;
+		if best weapon is a melee weapon (called MW):
+			let WS be the weapon type specialty of MW;
+			now R is the WS weapon specialty result for the defender;
+	now the parry report defender is the defender;
+	now the parry report attacker is the attacker;
+	now the parry report result is R;
+	carry out the reporting a parry result activity;
+	if R is success or R is special: decide yes;
+	decide no.
+
 Section 7 - Dodging
+
+Reporting a dodge result is an activity.
+The dodge report defender is a person that varies.
+The dodge report attacker is a person that varies.
+The dodge report result is a result that varies.
+
+Last for reporting a dodge result:
+	if the dodge report result is special or the dodge report result is success:
+		if the dodge report defender is the player:
+			say "You dodge [the dodge report attacker]'s attack!";
+		otherwise:
+			say "[The dodge report defender] dodges your attack!";
+	otherwise:
+		if the dodge report defender is the player:
+			say "You fail to dodge [the dodge report attacker]'s attack!";
+		otherwise:
+			say "[The dodge report defender] fails to dodge your attack!".
+
+To decide whether (defender - a person) successfully dodges the attack by (attacker - a person):
+	let R be the Dodge result for the defender;
+	now the dodge report defender is the defender;
+	now the dodge report attacker is the attacker;
+	now the dodge report result is R;
+	carry out the reporting a dodge result activity;
+	if R is success or R is special: decide yes;
+	decide no.
 
 Section 8 - Combat Summary
 

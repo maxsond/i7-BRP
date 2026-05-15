@@ -18,6 +18,12 @@ Section 1 - Acknowledgements
 [ Thanks to Chaosium for the BRP SRD that allows this project to exist ]
 [ Thanks to Andrew Plotkin for helping work around a bug in table traversal ]
 
+Section 2 - Utilities
+
+To say subject (P - a person):
+	if P is the player, say "You";
+	otherwise say "[The P]".
+
 Chapter 1 - Introduction
 
 Section 1 - Legal Licensing Stuff
@@ -51,6 +57,9 @@ To decide which number is the result of (the roll - a die roll):
 		let sum be sum + rolled val;
 		let dice rolled be dice rolled + 1;
 	decide on sum.
+
+To decide which number is the maximum of (DR - a die roll):
+	decide on (the amount part of DR) * (the sides part of DR).
 
 Chapter 2 - Character Creation
 
@@ -162,7 +171,7 @@ To decide which result is the (R - characteristic roll) roll for (P - a person) 
 	otherwise if D is difficult:
 		let effective value be effective value divided by 2;
 	if BRP Verbosity is true:
-		say "[The printed name of P] rolled [rolled val] against an effective [R] value of [effective value] (Difficulty: [D]).[paragraph break]" in sentence case;
+		say "[subject P] rolled [rolled val] against an effective [R] value of [effective value] (Difficulty: [D]).[paragraph break]" in sentence case;
 	if rolled val <= 0.2 times effective value:
 		decide on special;
 	otherwise if rolled val <= effective value:
@@ -186,13 +195,19 @@ To decide which result is the (R - characteristic roll) roll for (P - a person):
 Section 5 - Derived Characteristics
 
 A person has a number called move. The move of a person is usually 10. [The default for humans]
-To decide what number is the hit points of (P - person):
+To decide what number is the maximum hit points of (P - person):
 	decide on the size value of P + the constitution value of P / 2.
 To decide what number is the maximum power points of (P - person):
 	decide on the power value of P.
 To decide what number is the damage bonus of (P - person):
 	let i be the strength value of P + the size value of P;
 	decide on the result of the damage modifier corresponding to a STRSIZ of i in Table 2.5.1.
+
+A person has a number called current hit points.
+
+When play begins:
+	repeat with P running through people:
+		now the current hit points of P is the maximum hit points of P.
 
 Table 2.5.1 - Damage Bonus
 STRSIZ	Damage Modifier
@@ -255,7 +270,7 @@ STRSIZ	Damage Modifier
 Section 6 - Skills
 
 Skill is a kind of value. The skills are defined by the Table of Skills.
-A skill category is a kind of value. The skill categories are physical, perception, and general.
+A skillcategory is a kind of value. The skillcategories are physical, perception, and general.
 
 [The reason for the table rather than making skill a number is that we want to perform many operations involving skills (making skill rolls, contests, and so on), and we need to be able to reference skills by name, especially to enable games to extend the skill list and have all the skill mechanics work seamlessly with their new skills]
 Table of Skills
@@ -399,7 +414,7 @@ To decide which result is a BRP roll of (N - number) labeled (L - text) for (P -
 		let rating be rating / 2;
 	let rolled val be a random number from 1 to 100;
 	if BRP Verbosity is true:
-		say "[The printed name of P] rolled [rolled val] against an effective [L] value of [rating] (Difficulty: [D]).[paragraph break]" in sentence case;
+		say "[subject P] rolled [rolled val] against an effective [L] value of [rating] (Difficulty: [D]).[paragraph break]" in sentence case;
 	if rolled val <= rating / 5:
 		decide on special;
 	otherwise if rolled val <= rating:
@@ -518,10 +533,10 @@ To decide which number is a BRP experience roll for (P - person) at (current - n
 	if DR > current:
 		let points be the result of 1d6;
 		if BRP verbosity is true:
-			say "[line break][The printed name of P] gained [points] in [L], which is now [current + points].[line break]";
+			say "[line break][subject P] gained [points] in [L], which is now [current + points].[line break]";
 		decide on points;
 	if BRP verbosity is true:
-		say "[line break][The printed name of P] failed the d100 roll to increase experience in [L]: [DR] <= [current].[line break]";
+		say "[line break][subject P] failed the d100 roll to increase experience in [L]: [DR] <= [current].[line break]";
 	decide on 0.
 
 To give (P - a person) experience in (S - a skill):
@@ -594,17 +609,126 @@ To add (P - a person) to the combat order:
 	otherwise:
 		add P at entry insertion point in the list of combatants.
 
-Instead of attacking someone (called the target):
-	Now combat mode is true;
-	add target to the combat order;
-	add the player to the combat order.
-	
+Instead of attacking someone when using basic combat is true:
+	say "Specify a weapon: try 'attack [the noun] with [italic type]weapon[roman type]' or 'attack [the noun] unarmed'."
+
 
 Section 3 - Movement
 
 Section 4 - Actions
 
 Section 5 - Attacking
+
+Attacking it with is an action applying to one visible thing and one carried thing.
+Understand "attack [someone] with [something]" as attacking it with.
+
+Check attacking it with (this is the weapon type check rule):
+	if the second noun is not a melee weapon and the second noun is not a missile weapon:
+		say "[The second noun] is not a weapon." instead;
+	if the second noun is a melee weapon and the melee weapon type of the second noun is nil melee weapon:
+		say "[The second noun] has no weapon type assigned." instead;
+	if the second noun is a missile weapon and the missile weapon type of the second noun is nil missile weapon:
+		say "[The second noun] has no weapon type assigned." instead.
+
+Reporting an attack result is an activity.
+The attack report attacker is a person that varies.
+The attack report target is a thing that varies.
+The attack report weapon is an object that varies.
+The attack report result is a result that varies.
+The attack report raw damage is a number that varies.
+
+Last for reporting an attack result:
+	if the attack report result is special:
+		say "You strike [the attack report target] with an exceptional blow! ";
+	otherwise if the attack report result is success:
+		say "You hit [the attack report target]. ";
+	otherwise if the attack report result is failure:
+		say "Your attack misses [the attack report target].";
+	otherwise:
+		say "You fumble your attack!".
+
+Carry out attacking it with (this is the weapon attack rule):
+	if the player is not listed in the list of combatants:
+		if the noun is a person (called the target):
+			add the target to the combat order;
+		add the player to the combat order;
+		enable combat mode;
+	let WS be nil specialty;
+	if the second noun is a melee weapon (called MW):
+		now WS is the weapon type specialty of MW;
+	otherwise if the second noun is a missile weapon (called MSW):
+		now WS is the weapon type specialty of MSW;
+	let R be the WS weapon specialty result for the player;
+	now the attack report attacker is the player;
+	now the attack report target is the noun;
+	now the attack report weapon is the second noun;
+	now the attack report result is R;
+	if R is special:
+		let SD be the special attack damage of the second noun by the player;
+		now the attack report raw damage is SD;
+		carry out the reporting an attack result activity;
+		apply SD points of damage to the noun;
+	otherwise if R is success:
+		let ND be the attack damage of the second noun by the player;
+		now the attack report raw damage is ND;
+		carry out the reporting an attack result activity;
+		apply ND points of damage to the noun;
+	otherwise if R is failure:
+		now the attack report raw damage is 0;
+		carry out the reporting an attack result activity;
+	otherwise:
+		now the attack report raw damage is 0;
+		carry out the reporting an attack result activity;
+		now the fumble context weapon is the second noun;
+		now the fumble context attacker is the player;
+		follow the attacking fumble rules.
+
+Unarmed attacking is an action applying to one visible thing.
+Understand "attack [someone] unarmed" as unarmed attacking.
+
+Carry out unarmed attacking (this is the unarmed attack rule):
+	if the player is not listed in the list of combatants:
+		if the noun is a person (called the target):
+			add the target to the combat order;
+		add the player to the combat order;
+		enable combat mode;
+	let R be the Brawl result for the player;
+	now the attack report attacker is the player;
+	now the attack report target is the noun;
+	now the attack report weapon is nothing;
+	now the attack report result is R;
+	if R is special:
+		let SD be the special unarmed damage of the player;
+		now the attack report raw damage is SD;
+		carry out the reporting an attack result activity;
+		apply SD points of damage to the noun;
+	otherwise if R is success:
+		let ND be the unarmed damage of the player;
+		now the attack report raw damage is ND;
+		carry out the reporting an attack result activity;
+		apply ND points of damage to the noun;
+	otherwise if R is failure:
+		now the attack report raw damage is 0;
+		carry out the reporting an attack result activity;
+	otherwise:
+		now the attack report raw damage is 0;
+		carry out the reporting an attack result activity;
+		now the fumble context weapon is nothing;
+		now the fumble context attacker is the player;
+		follow the attacking fumble rules.
+
+[ Fumble hook: set fumble context weapon and fumble context attacker before the rules fire. ]
+The attacking fumble rules is a rulebook.
+The fumble context weapon is an object that varies.
+The fumble context attacker is a person that varies.
+
+To decide which weapon specialty is the weapon type specialty of (W - a melee weapon):
+	choose the row with a melee weapon type of (melee weapon type of W) in Table of Melee Weapon Types;
+	decide on the Specialty entry.
+
+To decide which weapon specialty is the weapon type specialty of (W - a missile weapon):
+	choose the row with a missile weapon type of (missile weapon type of W) in Table of Missile Weapon Types;
+	decide on the Specialty entry.
 
 Section 6 - Parrying
 
@@ -618,25 +742,25 @@ A weapon specialty is a kind of value. The weapon specialties are defined by the
 
 Table of Weapon Specialties
 Weapon Specialty	Base Chance
-no weapon specialty	0
-axe	15
-club	25
-dagger	25
-hammer	25
-mace	25
-polearm	15
-spear	15
-staff	25
-sword	15
-bow	5
-crossbow	25
-sling	5
-throwing axe	10
-throwing dagger	15
-pistol	20
-rifle	25
-laser pistol	20
-laser rifle	15
+nil specialty	0
+axe specialty	15
+club specialty	25
+dagger specialty	25
+hammer specialty	25
+mace specialty	25
+polearm specialty	15
+spear specialty	15
+staff specialty	25
+sword specialty	15
+bow specialty	5
+crossbow specialty	25
+sling specialty	5
+throwing axe specialty	10
+throwing dagger specialty	15
+pistol specialty	20
+rifle specialty	25
+laser pistol specialty	20
+laser rifle specialty	15
 
 A weapon bonus type is a kind of value. The weapon bonus types are no weapon bonus, half weapon bonus, and full weapon bonus.
 
@@ -644,49 +768,49 @@ A melee weapon type is a kind of value. The melee weapon types are defined by th
 
 Table of Melee Weapon Types
 Melee Weapon Type	Specialty	Base	Damage Die	Flat Bonus	Hands	HP
-no melee weapon	axe	0	0d6	0	1	0
-battle axe	axe	15	1d8	2	1	15
-great axe	axe	15	2d6	2	2	15
-hand axe	axe	15	1d6	1	1	12
-heavy club	club	25	1d8	0	2	22
-light club	club	25	1d6	0	1	15
-dagger	dagger	25	1d4	0	1	15
-halberd	polearm	15	3d6	0	2	25
-hammer	hammer	25	1d6	0	1	15
-great hammer	hammer	25	1d10	3	2	15
-knife	dagger	25	1d3	1	1	15
-heavy mace	mace	25	1d8	2	2	10
-light mace	mace	25	1d6	2	1	6
-pike	polearm	15	1d10	2	2	12
-quarter staff	staff	25	1d8	0	2	8
-long spear	spear	15	1d10	0	2	10
-broad sword	sword	15	1d8	1	1	12
-great sword	sword	5	2d8	0	2	12
-short sword	sword	15	1d6	1	1	12
+nil melee weapon	nil specialty	0	0d6	0	1	0
+battle axe	axe specialty	15	1d8	2	1	15
+great axe	axe specialty	15	2d6	2	2	15
+hand axe	axe specialty	15	1d6	1	1	12
+heavy club	club specialty	25	1d8	0	2	22
+light club	club specialty	25	1d6	0	1	15
+dagger	dagger specialty	25	1d4	0	1	15
+halberd	polearm specialty	15	3d6	0	2	25
+hammer	hammer specialty	25	1d6	0	1	15
+great hammer	hammer specialty	25	1d10	3	2	15
+knife	dagger specialty	25	1d3	1	1	15
+heavy mace	mace specialty	25	1d8	2	2	10
+light mace	mace specialty	25	1d6	2	1	6
+pike	polearm specialty	15	1d10	2	2	12
+quarter staff	staff specialty	25	1d8	0	2	8
+long spear	spear specialty	15	1d10	0	2	10
+broad sword	sword specialty	15	1d8	1	1	12
+great sword	sword specialty	5	2d8	0	2	12
+short sword	sword specialty	15	1d6	1	1	12
 
 A missile weapon type is a kind of value. The missile weapon types are defined by the Table of Missile Weapon Types.
 
 Table of Missile Weapon Types
 Missile Weapon Type	Specialty	Base	Damage Die	Flat Bonus	Bonus Type	Hands	HP	Range
-no missile weapon	no weapon specialty	0	0d6	0	no weapon bonus	1	0	0
-thrown hand axe	throwing axe	10	1d6	0	half weapon bonus	1	12	20
-long bow	bow	5	1d8	1	half weapon bonus	2	10	90
-heavy crossbow	crossbow	25	2d6	2	no weapon bonus	2	18	55
-light crossbow	crossbow	25	1d6	2	no weapon bonus	2	10	40
-thrown dagger	throwing dagger	15	1d4	0	half weapon bonus	1	15	10
-thrown knife	throwing dagger	15	1d3	1	half weapon bonus	1	10	10
-pistol	pistol	20	1d8	0	no weapon bonus	1	8	20
-laser pistol	laser pistol	20	1d8	0	no weapon bonus	1	14	20
-rifle	rifle	25	2d6	0	no weapon bonus	2	12	80
-laser rifle	laser rifle	15	2d8	0	no weapon bonus	2	20	100
-sling	sling	5	1d8	0	half weapon bonus	2	2	80
-thrown rock	no weapon specialty	0	1d2	0	half weapon bonus	1	0	20
+nil missile weapon	nil specialty	0	0d6	0	no weapon bonus	1	0	0
+thrown hand axe	throwing axe specialty	10	1d6	0	half weapon bonus	1	12	20
+long bow	bow specialty	5	1d8	1	half weapon bonus	2	10	90
+heavy crossbow	crossbow specialty	25	2d6	2	no weapon bonus	2	18	55
+light crossbow	crossbow specialty	25	1d6	2	no weapon bonus	2	10	40
+thrown dagger	throwing dagger specialty	15	1d4	0	half weapon bonus	1	15	10
+thrown knife	throwing dagger specialty	15	1d3	1	half weapon bonus	1	10	10
+pistol	pistol specialty	20	1d8	0	no weapon bonus	1	8	20
+laser pistol	laser pistol specialty	20	1d8	0	no weapon bonus	1	14	20
+rifle	rifle specialty	25	2d6	0	no weapon bonus	2	12	80
+laser rifle	laser rifle specialty	15	2d8	0	no weapon bonus	2	20	100
+sling	sling specialty	5	1d8	0	half weapon bonus	2	2	80
+thrown rock	nil specialty	0	1d2	0	half weapon bonus	1	0	20
 
 A melee weapon is a kind of thing.
-A melee weapon has a melee weapon type. The melee weapon type of a melee weapon is usually no melee weapon.
+A melee weapon has a melee weapon type. The melee weapon type of a melee weapon is usually nil melee weapon.
 
 A missile weapon is a kind of thing.
-A missile weapon has a missile weapon type. The missile weapon type of a missile weapon is usually no missile weapon.
+A missile weapon has a missile weapon type. The missile weapon type of a missile weapon is usually nil missile weapon.
 
 [ Character weapon specialties duplicate a lot of skill logic to enable game authors
 to extend the table and have their new weapon specialties "just work" ]
@@ -709,35 +833,35 @@ To set the (WS - weapon specialty) weapon specialty rating of (P - a person) to 
 		choose the row with a CharacterWeapon of LP in Table of Character Weapon Specialties;
 		now the Points entry is N;
 	otherwise:
-		say "Oh dear, something tried to set the [WS] weapon specialty of [P] to [N], but that character and weapon specialty pairing was not authored. Please contact your friendly local game developer and notify them of this bug."
+		say "Oh dear, something tried to set the [WS] of [P] to [N], but that character and weapon specialty pairing was not authored. Please contact your friendly local game developer and notify them of this bug."
 
 To give (P - a person) experience in (WS - weapon specialty) weapon specialty:
-	let gain be a BRP experience roll for P at (the WS weapon specialty rating of P) labeled "[WS] weapon specialty";
+	let gain be a BRP experience roll for P at (the WS weapon specialty rating of P) labeled "[WS]";
 	if gain > 0:
 		set the WS weapon specialty rating of P to the WS weapon specialty rating of P + gain.
 
 To decide which result is the (WS - weapon specialty) weapon specialty result for (P - person) - (D - skill roll difficulty):
-	decide on a BRP roll of (the WS weapon specialty rating of P) labeled "[WS] weapon specialty" for P - D.
+	decide on a BRP roll of (the WS weapon specialty rating of P) labeled "[WS]" for P - D.
 
 To decide which result is the (WS - weapon specialty) weapon specialty result for (P - person):
 	decide on the WS weapon specialty result for P - normal.
 
-To decide which number is the melee damage of (MWT - melee weapon type) for (A - a person):
+To decide which number is the melee damage of (MWT - melee weapon type) for (P - a person):
 	choose the row with a melee weapon type of MWT in Table of Melee Weapon Types;
 	let base be the result of the Damage Die entry;
-	let total be base + the Flat Bonus entry + the damage bonus of A;
+	let total be base + the Flat Bonus entry + the damage bonus of P;
 	if total < 0:
 		decide on 0;
 	decide on total.
 
-To decide which number is the missile damage of (MWT - missile weapon type) for (A - a person):
+To decide which number is the missile damage of (MWT - missile weapon type) for (P - a person):
 	choose the row with a missile weapon type of MWT in Table of Missile Weapon Types;
 	let base be the result of the Damage Die entry;
 	let total be base + the Flat Bonus entry;
 	if the Bonus Type entry is half weapon bonus:
-		now total is total + the damage bonus of A / 2;
+		now total is total + the damage bonus of P / 2;
 	otherwise if the Bonus Type entry is full weapon bonus:
-		now total is total + the damage bonus of A;
+		now total is total + the damage bonus of P;
 	if total < 0:
 		decide on 0;
 	decide on total.
@@ -752,6 +876,80 @@ To decide which skill roll difficulty is the range difficulty for (MWT - missile
 	if D > R:
 		decide on difficult;
 	decide on normal.
+
+To decide which number is the special success melee damage of (MWT - melee weapon type) for (A - a person):
+	choose the row with a melee weapon type of MWT in Table of Melee Weapon Types;
+	let DD be the Damage Die entry;
+	decide on the maximum of DD + the Flat Bonus entry + the melee damage of MWT for A.
+
+To decide which number is the special success missile damage of (MWT - missile weapon type) for (A - a person):
+	choose the row with a missile weapon type of MWT in Table of Missile Weapon Types;
+	let DD be the Damage Die entry;
+	decide on the maximum of DD + the Flat Bonus entry + the missile damage of MWT for A.
+
+To decide which number is the attack damage of (W - a thing) by (A - a person):
+	if W is a melee weapon (called MW):
+		decide on the melee damage of (melee weapon type of MW) for A;
+	if W is a missile weapon (called MSW):
+		decide on the missile damage of (missile weapon type of MSW) for A;
+	decide on 0.
+
+To decide which number is the special attack damage of (W - a thing) by (A - a person):
+	if W is a melee weapon (called MW):
+		decide on the special success melee damage of (melee weapon type of MW) for A;
+	if W is a missile weapon (called MSW):
+		decide on the special success missile damage of (missile weapon type of MSW) for A;
+	decide on 0.
+
+To decide which number is the unarmed damage of (A - a person):
+	let total be the result of 1d3 + the damage bonus of A;
+	if total < 0:
+		decide on 0;
+	decide on total.
+
+To decide which number is the special unarmed damage of (A - a person):
+	let total be 3 + the damage bonus of A;
+	if total < 0:
+		decide on 0;
+	decide on total.
+
+Reporting damage applied is an activity.
+The damage report target is a thing that varies.
+The damage report raw damage is a number that varies.
+The damage report net damage is a number that varies.
+
+A person can be conscious, unconscious, or dead. A person is usually conscious.
+
+Last for reporting damage applied:
+	let N be the damage report raw damage;
+	let net be the damage report net damage;
+	let T be the damage report target;
+	if net is 0 and N > 0:
+		say "[N] damage, fully absorbed by armor. ";
+	otherwise if net < N:
+		say "[N] damage, reduced to [net] after armor. ";
+	otherwise:
+		say "[N] damage. ";
+	if T is a person (called P):
+		if the current hit points of P <= 0:
+			now P is dead;
+			say "[The P] is dead.";
+		otherwise if the current hit points of P <= 2:
+			now p is unconscious;
+			say "[The P] falls unconscious."
+
+To apply (N - number) points of damage to (T - a thing):
+	if T is a person (called the target):
+		let absorbed be the effective armor points of target;
+		let net be N - absorbed;
+		if net < 0:
+			now net is 0;
+		now the current hit points of target is the current hit points of target - net;
+		now the damage report target is T;
+		now the damage report raw damage is N;
+		now the damage report net damage is net;
+		carry out the reporting damage applied activity.
+	[ TODO: handle applying damage to shields and weapons ]
 
 Section 10 - Armor
 
@@ -795,10 +993,10 @@ To decide which number is the effective (S - skill) rating of (P - a person):
 			now modifier is modifier + the physical penalty entry;
 		otherwise if cat is perception:
 			now modifier is modifier + the perception penalty entry;
-	let result be base + modifier;
-	if result < 0:
+	let total be base + modifier;
+	if total < 0:
 		decide on 0;
-	decide on result.
+	decide on total.
 
 Section 11 - Shields
 
@@ -817,7 +1015,7 @@ target	12	1d2	15	15
 A shield is a kind of thing. A shield is wearable.
 A shield has a shield type. The shield type of a shield is usually no shield.
 
-Check wearing (S - a shield):
+Check wearing when the noun is a shield:
 	if a shield (called current shield) is worn by the actor:
 		say "[The actor] is already using [the current shield] as a shield.";
 		stop the action.
@@ -960,6 +1158,108 @@ Shields:
 	To get a person's shield damage (shield die from table plus damage bonus, 0 if no shield worn):
 		`the shield damage of (person)`
 
+Melee Weapons:
+	Melee weapons are things of kind `melee weapon`. Each has one property:
+		`melee weapon type` - a value of kind `melee weapon type` (default: nil melee weapon)
+	`melee weapon type` is defined by the Table of Melee Weapon Types, which lists every SRD melee weapon
+	along with its specialty, base chance, damage die, flat bonus, hands required, and HP. To create one:
+		`A goblin spear is a melee weapon. The melee weapon type of the goblin spear is long spear.`
+	Weapons with a nil type will print an error if the player tries to attack with them, so always set
+	the weapon type when authoring a weapon. For custom melee weapon types, add a row to the table.
+	The SRD melee weapon types are:
+		battle axe, great axe, hand axe, heavy club, light club, dagger, halberd, hammer, great hammer,
+		knife, heavy mace, light mace, pike, quarter staff, long spear, broad sword, great sword, short sword
+
+Missile Weapons:
+	Missile weapons are things of kind `missile weapon`. Each has one property:
+		`missile weapon type` - a value of kind `missile weapon type` (default: nil missile weapon)
+	`missile weapon type` is defined by the Table of Missile Weapon Types, which lists every SRD missile
+	weapon along with its specialty, base chance, damage die, flat bonus, damage bonus type, hands
+	required, HP, and range (in meters). To create one:
+		`An old shortbow is a missile weapon. The missile weapon type of the old shortbow is long bow.`
+	As with melee weapons, a nil type will produce an error on use. For custom missile weapon types,
+	add a row to the table. The SRD missile weapon types are:
+		thrown hand axe, long bow, heavy crossbow, light crossbow, thrown dagger, thrown knife, pistol,
+		laser pistol, rifle, laser rifle, sling, thrown rock
+	To get the range-based difficulty for a missile weapon at a given distance (in meters):
+		`the range difficulty for (missile weapon type) at (number) meters`
+		Returns easy/normal/difficult/very difficult/impossible per SRD range bands.
+
+Weapon Specialties:
+	Each weapon type belongs to a weapon specialty (e.g. long spear uses spear specialty, long bow uses
+	bow specialty). Specialty ratings are tracked in the Table of Character Weapon Specialties. To author
+	a character's specialty, add an entry:
+		Table of Character Weapon Specialties (continued)
+		CharacterWeapon          Points
+		"Brunhilde-sword specialty"   30
+	Weapon specialty mechanics work identically to shield specialties. The SRD weapon specialties are:
+		nil specialty, axe specialty, club specialty, dagger specialty, hammer specialty, mace specialty,
+		polearm specialty, spear specialty, staff specialty, sword specialty, bow specialty,
+		crossbow specialty, sling specialty, throwing axe specialty, throwing dagger specialty,
+		pistol specialty, rifle specialty, laser pistol specialty, laser rifle specialty
+	To get a specialty rating:
+		`the (weapon specialty) weapon specialty rating of (person)`
+	To set a specialty rating:
+		`set the (weapon specialty) weapon specialty rating of (person) to (number)`
+	To make a specialty roll:
+		`the (weapon specialty) weapon specialty result for (person) - (difficulty)`
+	To give specialty experience (same 1d6 advancement mechanic as skills):
+		`give (person) experience in (weapon specialty) weapon specialty`
+	To get the normal or special-success damage dealt by a weapon:
+		`the attack damage of (weapon) by (person)`
+		`the special attack damage of (weapon) by (person)`
+
+Attacking:
+	When `using basic combat is true` (the default), the following player commands are available:
+		`attack [someone] with [weapon]` - attack using a carried melee or missile weapon
+		`attack [someone] unarmed` - attack bare-handed using the Brawl skill
+	Set `using basic combat is false` to disable these and supply your own combat actions.
+
+	Weapon attacks roll the weapon's specialty. Unarmed attacks roll Brawl. Results:
+		special  - maximum damage dealt (weapon: max die roll + bonuses; unarmed: 3 + damage bonus)
+		success  - normal damage dealt (weapon: rolled die + bonuses; unarmed: 1d3 + damage bonus)
+		failure  - miss, no damage
+		fumble   - fires the `attacking fumble rules` rulebook (see below)
+	All damage is reduced by the target's worn armor before being applied to current hit points.
+
+	Attack result messages are produced by the `reporting an attack result` activity. Before it
+	fires, five variables are set:
+		`attack report attacker` - the person attacking
+		`attack report target` - the thing being attacked
+		`attack report weapon` - the weapon used (or `nothing` for unarmed)
+		`attack report result` - the result (special, success, failure, or fumble)
+		`attack report raw damage` - the damage rolled (0 for failure/fumble)
+	Override the default messages by adding a `for reporting an attack result` rule:
+		For reporting an attack result:
+			if the attack report result is failure:
+				say "The blow misses [the attack report target] entirely.";
+			otherwise if the attack report result is success:
+				say "[The attack report attacker] strikes for [attack report raw damage] damage!";
+			[etc.]
+
+	The attacking fumble rules rulebook fires on any fumble. Before it fires, two variables are set:
+		`fumble context weapon` - the weapon used (or `nothing` for unarmed)
+		`fumble context attacker` - the person who fumbled
+	Add rules to this rulebook in your game to implement fumble consequences:
+		An attacking fumble rule (this is the drop weapon on fumble rule):
+			if the fumble context weapon is not nothing:
+				say "[The fumble context attacker] drops [the fumble context weapon]!";
+				now the fumble context attacker does not have the fumble context weapon.
+
+	To apply damage directly (e.g. from traps, spells, or custom combat actions):
+		`apply (number) points of damage to (thing)`
+		Armor is subtracted automatically; damage is floored at 0. Current HP is tracked in the
+		`current hit points` property; maximum HP (SIZ+CON/2) is read via:
+		`the maximum hit points of (person)`
+	Damage messages are produced by the `reporting damage applied` activity. Before it fires,
+	three variables are set:
+		`damage report target` - the thing damaged
+		`damage report raw damage` - damage before armor reduction
+		`damage report net damage` - damage after armor reduction (0 if fully absorbed)
+	Override the default messages by adding a `for reporting damage applied` rule:
+		For reporting damage applied:
+			say "[damage report net damage] point[s] of damage to [the damage report target]."
+
 Attribute-derived skill base chances:
 	Several skills have base chances derived from character attributes rather than fixed values: Dodge (DEX×2), Gaming (INT+POW), Language Own (INT×5), Literacy (INT×5), Projection (DEX×2), Language Other (always 0). These are computed automatically from the character's attributes when no authored skill rating exists.
 	The Fly skill base depends on whether the character has natural flight (wings, etc.) or technological flight (jet pack, etc.). Use `now (person) is naturally flying` or `now (person) is technologically flying` to set this. The default is technological (DEX÷2). Natural flight uses DEX×4.
@@ -1027,8 +1327,17 @@ Example: **** The Arena - Demonstrate basic combat
 	The Arena is a room. "You enter the arena, facing down a variety of combatants. The audience waits with bated breath for you to choose your adversary." 
 	
 	Bob the Goblin is here. He is a man. 
-	Archie the Archer is here. He is a man. 
+	A goblin spear is a melee weapon.  The melee weapon type of a goblin spear is long spear.
+	A goblin breastplate is an armor piece. The armor type of a goblin breastplate is hoplite panoply.
+	Bob the Goblin is wearing a goblin breastplate.
+	Bob the Goblin is holding a goblin spear.
+	Archie the Archer is here. He is a man.
+	An old shortbow is a missile weapon. The missile weapon type of an old shortbow is long bow.
+	An archer's leather tunic is an armor piece. The armor type of an archer's leather tunic is soft leather.
+	An archer's leather boots is an armor piece. The armor type of an archer's leather boots is soft leather.
+	Archie the Archer is wearing a worn shortbow, an archer's leather tunic, and an archer's leather boots.
 	Marge the Mage is here. She is a woman.
+	A lumberjack axe is a melee weapon. The melee weapon type of a lumberjack axe is hand axe. A lumberjack axe is here.
 	
 Example: **** Train Station - Demonstrate use of skills and characteristic rolls in a demo scene.
 

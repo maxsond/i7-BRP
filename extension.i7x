@@ -622,6 +622,59 @@ To decide which number is the combat distance between (A - a thing) and (B - a t
 	now the distance query target is B;
 	decide on the number produced by the get combat distance rules.
 
+[ Set by carry-out rules before resolving the combat round.
+  nothing = the player is attacking unarmed this round. ]
+The current round player weapon is an object that varies.
+
+[ Set by the npc combat intent rulebook immediately before each NPC executes.
+  nothing = no target in range; the NPC skips their action this round. ]
+The npc action target is a thing that varies.
+The npc action weapon is an object that varies.
+
+The npc combat intent rules is a rulebook operating on a person.
+
+Last npc combat intent rule for a person (called the NPC) when using basic combat is true
+	(this is the default npc attack intent rule):
+	let D be the combat distance between the NPC and the player;
+	if D <= 3:
+		let best melee be nothing;
+		let best melee damage be 0;
+		repeat with W running through things carried by the NPC:
+			if W is a melee weapon (called MW):
+				if the melee weapon type of MW is not nil melee weapon:
+					let MWT be the melee weapon type of MW;
+					choose the row with a melee weapon type of MWT in Table of Melee Weapon Types;
+					let DMG be the maximum of the Damage Die entry + the Flat Bonus entry;
+					if DMG > best melee damage:
+						now best melee damage is DMG;
+						now best melee is W;
+		if best melee is not nothing:
+			now the npc action target is the player;
+			now the npc action weapon is best melee;
+			rule succeeds;
+		now the npc action target is the player;
+		now the npc action weapon is nothing;
+		rule succeeds;
+	let best missile be nothing;
+	let best missile damage be 0;
+	repeat with W running through things carried by the NPC:
+		if W is a missile weapon (called MSW):
+			let MWT be the missile weapon type of MSW;
+			if MWT is not nil missile weapon:
+				let R be the range of MWT;
+				if D <= 3 * R:
+					choose the row with a missile weapon type of MWT in Table of Missile Weapon Types;
+					let DMG be the maximum of the Damage Die entry + the Flat Bonus entry;
+					if DMG > best missile damage:
+						now best missile damage is DMG;
+						now best missile is W;
+	if best missile is not nothing:
+		now the npc action target is the player;
+		now the npc action weapon is best missile;
+		rule succeeds;
+	now the npc action target is nothing;
+	now the npc action weapon is nothing.
+
 Instead of attacking someone when using basic combat is true:
 	say "Specify a weapon: try 'attack [the noun] with [italic type]weapon[roman type]' or 'attack [the noun] unarmed'."
 
@@ -1299,6 +1352,27 @@ Combat Distance:
 	before the rulebook fires, so your rules can read them to compute distance however suits your
 	game: room adjacency, a coordinate table, a relation, or any other mechanism. Rules that do not
 	fire fall through to the default 3-meter result.
+
+NPC Combat Intent:
+	Each round, before an NPC acts, the extension follows the `npc combat intent rules` rulebook for
+	that NPC. Rules in this rulebook set two variables that control what the NPC does:
+		`npc action target` - the thing the NPC will attack (set to `nothing` to skip the action)
+		`npc action weapon` - the weapon used (`nothing` for an unarmed attack)
+
+	The default last rule scans the NPC's inventory. If the target is within melee range (3 m) it
+	picks the melee weapon with the highest base damage (max die roll + flat bonus), or falls back to
+	unarmed. Beyond melee range it tries missile weapons within 3× their range, again selecting the
+	highest base damage. If nothing reaches the target, the NPC skips their action.
+
+	To give a character custom combat AI, add a rule earlier in the rulebook:
+		First npc combat intent rule for the goblin chief:
+			now the npc action target is the player;
+			now the npc action weapon is the goblin chief's great axe;
+			rule succeeds.
+
+	The `rule succeeds` call stops the rulebook, so the default rule never fires for that NPC. Custom
+	rules can read `the combat distance between (A) and (B)` to make range-aware decisions, and can
+	set `npc action target` to any thing — including other NPCs or objects — not just the player.
 
 Attribute-derived skill base chances:
 	Several skills have base chances derived from character attributes rather than fixed values: Dodge (DEX×2), Gaming (INT+POW), Language Own (INT×5), Literacy (INT×5), Projection (DEX×2), Language Other (always 0). These are computed automatically from the character's attributes when no authored skill rating exists.

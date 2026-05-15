@@ -675,6 +675,78 @@ Last npc combat intent rule for a person (called the NPC) when using basic comba
 	now the npc action target is nothing;
 	now the npc action weapon is nothing.
 
+To decide which number is the weapon priority of (P - a person):
+	if P is the player:
+		let PW be the current round player weapon;
+		if PW is nothing: decide on 5;
+		if PW is a missile weapon: decide on 1;
+		if PW is a melee weapon (called MW):
+			let WS be the weapon type specialty of MW;
+			if WS is polearm specialty or WS is spear specialty: decide on 2;
+			if WS is dagger specialty: decide on 4;
+			decide on 3;
+		decide on 5;
+	let D be the combat distance between P and the player;
+	if D <= 3:
+		repeat with W running through things carried by P:
+			if W is a melee weapon (called MW):
+				if the melee weapon type of MW is not nil melee weapon:
+					let WS be the weapon type specialty of MW;
+					if WS is polearm specialty or WS is spear specialty: decide on 2;
+					if WS is dagger specialty: decide on 4;
+					decide on 3;
+	repeat with W running through things carried by P:
+		if W is a missile weapon (called MSW):
+			if the missile weapon type of MSW is not nil missile weapon:
+				let MWT be the missile weapon type of MSW;
+				let R be the range of MWT;
+				if D <= 3 * R: decide on 1;
+	decide on 5.
+
+[ Key = weapon priority * 1000 - skill%. Lower acts first. The 1000-gap ensures weapon type always dominates ]
+[ Equal keys are left in list order (simultaneous, per BRP SRD §5.2). ]
+To decide which number is the combat sort key of (P - a person):
+	if P is the player:
+		let PW be the current round player weapon;
+		if PW is nothing: decide on 5000 - (the Brawl rating of P);
+		if PW is a missile weapon (called MSW):
+			let WS be the weapon type specialty of MSW;
+			decide on 1000 - (the WS weapon specialty rating of P);
+		if PW is a melee weapon (called MW):
+			let WS be the weapon type specialty of MW;
+			if WS is polearm specialty or WS is spear specialty: decide on 2000 - (the WS weapon specialty rating of P);
+			if WS is dagger specialty: decide on 4000 - (the WS weapon specialty rating of P);
+			decide on 3000 - (the WS weapon specialty rating of P);
+		decide on 5000;
+	let D be the combat distance between P and the player;
+	if D <= 3:
+		repeat with W running through things carried by P:
+			if W is a melee weapon (called MW):
+				if the melee weapon type of MW is not nil melee weapon:
+					let WS be the weapon type specialty of MW;
+					if WS is polearm specialty or WS is spear specialty: decide on 2000 - (the WS weapon specialty rating of P);
+					if WS is dagger specialty: decide on 4000 - (the WS weapon specialty rating of P);
+					decide on 3000 - (the WS weapon specialty rating of P);
+	repeat with W running through things carried by P:
+		if W is a missile weapon (called MSW):
+			if the missile weapon type of MSW is not nil missile weapon:
+				let MWT be the missile weapon type of MSW;
+				let R be the range of MWT;
+				if D <= 3 * R:
+					let WS be the weapon type specialty of MSW;
+					decide on 1000 - (the WS weapon specialty rating of P);
+	decide on 5000 - (the Brawl rating of P).
+
+To sort the combat order by weapon priority:
+	let N be the number of entries in the list of combatants;
+	repeat with I running from 2 to N:
+		let C be entry I of the list of combatants;
+		let J be I;
+		while J > 1 and the dexterity value of entry (J - 1) of the list of combatants is the dexterity value of C and the combat sort key of entry (J - 1) of the list of combatants > the combat sort key of C:
+			now entry J of the list of combatants is entry (J - 1) of the list of combatants;
+			now J is J - 1;
+		now entry J of the list of combatants is C.
+
 Instead of attacking someone when using basic combat is true:
 	say "Specify a weapon: try 'attack [the noun] with [italic type]weapon[roman type]' or 'attack [the noun] unarmed'."
 

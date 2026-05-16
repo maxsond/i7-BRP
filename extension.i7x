@@ -648,7 +648,7 @@ Carry out adopting dodge stance:
 	now the defensive stance of the player is dodge stance;
 	say "You ready yourself to dodge incoming attacks."
 
-The npc combat intent rules is a rulebook operating on a person.
+The npc combat intent rules is a person based rulebook.
 
 Last npc combat intent rule for a person (called the NPC) when using basic combat is true
 	(this is the default npc attack intent rule):
@@ -695,12 +695,16 @@ Last npc combat intent rule for a person (called the NPC) when using basic comba
 To decide which number is the weapon priority of (P - a person):
 	if P is the player:
 		let PW be the current round player weapon;
-		if PW is nothing: decide on 5;
-		if PW is a missile weapon: decide on 1;
+		if PW is nothing:
+			decide on 5;
+		if PW is a missile weapon:
+			decide on 1;
 		if PW is a melee weapon (called MW):
 			let WS be the weapon type specialty of MW;
-			if WS is polearm specialty or WS is spear specialty: decide on 2;
-			if WS is dagger specialty: decide on 4;
+			if WS is polearm specialty or WS is spear specialty:
+				decide on 2;
+			if WS is dagger specialty:
+				decide on 4;
 			decide on 3;
 		decide on 5;
 	let D be the combat distance between P and the player;
@@ -709,15 +713,18 @@ To decide which number is the weapon priority of (P - a person):
 			if W is a melee weapon (called MW):
 				if the melee weapon type of MW is not nil melee weapon:
 					let WS be the weapon type specialty of MW;
-					if WS is polearm specialty or WS is spear specialty: decide on 2;
-					if WS is dagger specialty: decide on 4;
+					if WS is polearm specialty or WS is spear specialty:
+						decide on 2;
+					if WS is dagger specialty:
+						decide on 4;
 					decide on 3;
 	repeat with W running through things carried by P:
 		if W is a missile weapon (called MSW):
 			if the missile weapon type of MSW is not nil missile weapon:
 				let MWT be the missile weapon type of MSW;
 				let R be the range of MWT;
-				if D <= 3 * R: decide on 1;
+				if D <= 3 * R:
+					decide on 1;
 	decide on 5.
 
 [ Key = weapon priority * 1000 - skill%. Lower acts first. The 1000-gap ensures weapon type always dominates ]
@@ -725,14 +732,17 @@ To decide which number is the weapon priority of (P - a person):
 To decide which number is the combat sort key of (P - a person):
 	if P is the player:
 		let PW be the current round player weapon;
-		if PW is nothing: decide on 5000 - (the Brawl rating of P);
+		if PW is nothing:
+			decide on 5000 - (the Brawl rating of P);
 		if PW is a missile weapon (called MSW):
 			let WS be the weapon type specialty of MSW;
 			decide on 1000 - (the WS weapon specialty rating of P);
 		if PW is a melee weapon (called MW):
 			let WS be the weapon type specialty of MW;
-			if WS is polearm specialty or WS is spear specialty: decide on 2000 - (the WS weapon specialty rating of P);
-			if WS is dagger specialty: decide on 4000 - (the WS weapon specialty rating of P);
+			if WS is polearm specialty or WS is spear specialty:
+				decide on 2000 - (the WS weapon specialty rating of P);
+			if WS is dagger specialty:
+				decide on 4000 - (the WS weapon specialty rating of P);
 			decide on 3000 - (the WS weapon specialty rating of P);
 		decide on 5000;
 	let D be the combat distance between P and the player;
@@ -741,8 +751,10 @@ To decide which number is the combat sort key of (P - a person):
 			if W is a melee weapon (called MW):
 				if the melee weapon type of MW is not nil melee weapon:
 					let WS be the weapon type specialty of MW;
-					if WS is polearm specialty or WS is spear specialty: decide on 2000 - (the WS weapon specialty rating of P);
-					if WS is dagger specialty: decide on 4000 - (the WS weapon specialty rating of P);
+					if WS is polearm specialty or WS is spear specialty:
+						decide on 2000 - (the WS weapon specialty rating of P);
+					if WS is dagger specialty:
+						decide on 4000 - (the WS weapon specialty rating of P);
 					decide on 3000 - (the WS weapon specialty rating of P);
 	repeat with W running through things carried by P:
 		if W is a missile weapon (called MSW):
@@ -767,12 +779,13 @@ To sort the combat order by weapon priority:
 To decide whether (defender - a person) attempts to defend against the attack by (attacker - a person)
 	with (W - an object):
 	if defender is the player:
-		if the defensive stance of the player is undefended stance: decide no;
+		if the defensive stance of the player is undefended stance:
+			decide no;
 		if the defensive stance of the player is dodge stance:
 			decide on whether or not the player successfully dodges the attack by the attacker;
-		[ Parry stance: try parry, fall back to dodge if no eligible weapon/shield ]
-		if the player successfully parries the attack by the attacker with W:
-			decide yes;
+		[ Parry stance: try parry if eligible weapon/shield exists, else fall back to dodge ]
+		if the player has a parry option against W:
+			decide on whether or not the player successfully parries the attack by the attacker with W;
 		decide on whether or not the player successfully dodges the attack by the attacker;
 	[ NPC: choose by comparing best available defense rating ]
 	let dodge rating be the effective Dodge rating of the defender;
@@ -788,7 +801,8 @@ To decide whether (defender - a person) attempts to defend against the attack by
 				if the melee weapon type of PW is not nil melee weapon:
 					let WS be the weapon type specialty of PW;
 					let rating be the WS weapon specialty rating of the defender;
-					if rating > best parry rating: now best parry rating is rating;
+					if rating > best parry rating:
+						now best parry rating is rating;
 		if best parry rating >= dodge rating and best parry rating > 0:
 			decide on whether or not the defender successfully parries the attack by the attacker with W;
 		otherwise:
@@ -855,13 +869,13 @@ Last for reporting an attack result:
 			say "You fumble your attack!";
 	otherwise:
 		if the attack report result is special:
-			say "[The A] strikes [the attack report target] with an exceptional blow! ";
+			say "[The A] strikes [subject the attack report target] with an exceptional blow! ";
 		otherwise if the attack report result is success:
-			say "[The A] hits [the attack report target]. ";
+			say "[The A] hits [subject the attack report target]. ";
 		otherwise if the attack report result is failure:
-			say "[The A] misses [the attack report target].";
+			say "[The A] misses [subject the attack report target].";
 		otherwise:
-			say "[The A] fumbles their attack!".
+			say "[The A] fumbles [their] attack!".
 
 To execute an attack by (A - a person) against (T - a thing) with (W - an object):
 	let R be failure;
@@ -885,14 +899,20 @@ To execute an attack by (A - a person) against (T - a thing) with (W - an object
 		if attack negated is false:
 			let damage be 0;
 			if W is nothing:
-				if R is special: now damage is the special unarmed damage of A;
-				otherwise: now damage is the unarmed damage of A;
+				if R is special:
+					now damage is the special unarmed damage of A;
+				otherwise:
+					now damage is the unarmed damage of A;
 			otherwise if W is a melee weapon (called MT):
-				if R is special: now damage is the special attack damage of MT by A;
-				otherwise: now damage is the attack damage of MT by A;
+				if R is special:
+					now damage is the special attack damage of MT by A;
+				otherwise:
+					now damage is the attack damage of MT by A;
 			otherwise if W is a missile weapon (called MS):
-				if R is special: now damage is the special attack damage of MS by A;
-				otherwise: now damage is the attack damage of MS by A;
+				if R is special:
+					now damage is the special attack damage of MS by A;
+				otherwise:
+					now damage is the attack damage of MS by A;
 			now the attack report raw damage is damage;
 			carry out the reporting an attack result activity;
 			apply damage points of damage to T;
@@ -940,6 +960,15 @@ To decide which weapon specialty is the weapon type specialty of (W - a missile 
 	choose the row with a missile weapon type of (missile weapon type of W) in Table of Missile Weapon Types;
 	decide on the Specialty entry.
 
+To decide whether (defender - a person) has a parry option against (W - an object):
+	if W is a missile weapon:
+		decide on whether or not the missile parry chance of the defender > 0;
+	repeat with PW running through things carried by the defender:
+		if PW is a melee weapon:
+			if the melee weapon type of PW is not nil melee weapon:
+				decide yes;
+	decide no.
+
 Section 6 - Parrying
 
 Reporting a parry result is an activity.
@@ -963,7 +992,8 @@ To decide whether (defender - a person) successfully parries the attack by (atta
 	with (W - an object):
 	let R be failure;
 	if W is a missile weapon:
-		if the missile parry chance of the defender is 0: decide no;
+		if the missile parry chance of the defender is 0:
+			decide no;
 		now R is a BRP roll of (the missile parry chance of the defender)
 			labeled "missile parry" for the defender - normal;
 	otherwise:
@@ -977,7 +1007,8 @@ To decide whether (defender - a person) successfully parries the attack by (atta
 					if rating > best rating:
 						now best rating is rating;
 						now best weapon is PW;
-		if best weapon is nothing: decide no;
+		if best weapon is nothing:
+			decide no;
 		if best weapon is a melee weapon (called MW):
 			let WS be the weapon type specialty of MW;
 			now R is the WS weapon specialty result for the defender;
@@ -985,7 +1016,8 @@ To decide whether (defender - a person) successfully parries the attack by (atta
 	now the parry report attacker is the attacker;
 	now the parry report result is R;
 	carry out the reporting a parry result activity;
-	if R is success or R is special: decide yes;
+	if R is success or R is special:
+		decide yes;
 	decide no.
 
 Section 7 - Dodging
@@ -1013,7 +1045,8 @@ To decide whether (defender - a person) successfully dodges the attack by (attac
 	now the dodge report attacker is the attacker;
 	now the dodge report result is R;
 	carry out the reporting a dodge result activity;
-	if R is success or R is special: decide yes;
+	if R is success or R is special:
+		decide yes;
 	decide no.
 
 Section 8 - Combat Summary
@@ -1219,7 +1252,9 @@ Last for reporting damage applied:
 	if T is a person (called P):
 		if the current hit points of P <= 0:
 			now P is dead;
-			say "[The P] is dead.";
+			say "[The P] [are] dead.";
+			if the player is dead:
+				end the story;
 		otherwise if the current hit points of P <= 2:
 			now p is unconscious;
 			say "[The P] falls unconscious."
@@ -1663,57 +1698,6 @@ Example: **** The Arena - Demonstrate basic combat
 	Archie the Archer is wearing a worn shortbow, an archer's leather tunic, and an archer's leather boots.
 	Marge the Mage is here. She is a woman.
 	A lumberjack axe is a melee weapon. The melee weapon type of a lumberjack axe is hand axe. A lumberjack axe is here.
-
-	When play begins:
-		set the dexterity value of Bob the Goblin to 15;
-		set the dexterity value of Archie the Archer to 12;
-		set the dexterity value of yourself to 10.
-
-	[ TEST CASES (manually verify):
-
-	  1. NPC acts first (Bob DEX 15 > player DEX 10):
-	     Give the player a melee weapon. > attack bob the goblin with [weapon]
-	     Expected: Bob attacks first, player's parry or dodge fires automatically per stance.
-	               Player's attack resolves after.
-
-	  2. Player acts first:
-	     Set player DEX to 20, Bob DEX to 10.
-	     Expected: Player's attack resolves first; Bob counter-attacks after.
-
-	  3. NPC dies from player's blow:
-	     Player acts first, one-shots Bob.
-	     Expected: Bob's turn is skipped silently after death.
-
-	  4. NPC with no weapon (remove goblin spear):
-	     Expected: Bob attacks unarmed (Brawl roll, 1d3 + damage bonus).
-
-	  5. Parry success — player in parry stance with a melee weapon:
-	     Player is in parry stance (default) and carrying a melee weapon. Bob attacks.
-	     Expected: Parry roll fires automatically; on success, no damage applied.
-
-	  6. Dodge stance:
-	     > dodge, then > attack bob the goblin with [weapon].
-	     Expected: When Bob counter-attacks, dodge roll fires automatically instead of parry.
-
-	  7. Parry stance with no weapon — auto-fallback to dodge:
-	     Player is in parry stance but carrying nothing. Bob attacks.
-	     Expected: No parry attempted; dodge roll fires automatically.
-
-	  8. Missile parry requires shield:
-	     Player has no shield. > attack archie the archer with [weapon] (bring Archie into combat).
-	     Expected: When Archie counter-attacks, no parry attempted; dodge roll fires automatically.
-
-	  9. NPC auto-defence:
-	     Player acts first (player DEX 20). Archie has shortbow.
-	     Expected: After player attacks, Archie's defence roll fires automatically.
-
-	  10. Within-DEX sub-ordering (Bob spear DEX 12, Archie bow DEX 12):
-	      Set both to DEX 12. Both in list of combatants. Both attack player.
-	      Expected: Archie (missile, priority 1) acts before Bob (long melee, priority 2).
-
-	  11. Second round (no intent carry-over):
-	      After round 1 resolves, > attack bob the goblin with [weapon] again.
-	      Expected: Fresh round; all positions and states intact. ]
 
 Example: **** Train Station - Demonstrate use of skills and characteristic rolls in a demo scene.
 

@@ -631,7 +631,24 @@ The current round player weapon is an object that varies.
 The npc action target is a thing that varies.
 The npc action weapon is an object that varies.
 
-The npc combat intent rules is a rulebook operating on a person.
+Defensive stance is a kind of value. The defensive stances are parry stance, dodge stance, and undefended stance.
+A person has a defensive stance. A person is usually parry stance.
+
+Adopting parry stance is an action applying to nothing.
+Understand "parry" as adopting parry stance.
+
+Carry out adopting parry stance:
+	now the defensive stance of the player is parry stance;
+	say "You ready yourself to parry incoming attacks."
+
+Adopting dodge stance is an action applying to nothing.
+Understand "dodge" as adopting dodge stance.
+
+Carry out adopting dodge stance:
+	now the defensive stance of the player is dodge stance;
+	say "You ready yourself to dodge incoming attacks."
+
+The npc combat intent rules is a person based rulebook.
 
 Last npc combat intent rule for a person (called the NPC) when using basic combat is true
 	(this is the default npc attack intent rule):
@@ -678,12 +695,16 @@ Last npc combat intent rule for a person (called the NPC) when using basic comba
 To decide which number is the weapon priority of (P - a person):
 	if P is the player:
 		let PW be the current round player weapon;
-		if PW is nothing: decide on 5;
-		if PW is a missile weapon: decide on 1;
+		if PW is nothing:
+			decide on 5;
+		if PW is a missile weapon:
+			decide on 1;
 		if PW is a melee weapon (called MW):
 			let WS be the weapon type specialty of MW;
-			if WS is polearm specialty or WS is spear specialty: decide on 2;
-			if WS is dagger specialty: decide on 4;
+			if WS is polearm specialty or WS is spear specialty:
+				decide on 2;
+			if WS is dagger specialty:
+				decide on 4;
 			decide on 3;
 		decide on 5;
 	let D be the combat distance between P and the player;
@@ -692,15 +713,18 @@ To decide which number is the weapon priority of (P - a person):
 			if W is a melee weapon (called MW):
 				if the melee weapon type of MW is not nil melee weapon:
 					let WS be the weapon type specialty of MW;
-					if WS is polearm specialty or WS is spear specialty: decide on 2;
-					if WS is dagger specialty: decide on 4;
+					if WS is polearm specialty or WS is spear specialty:
+						decide on 2;
+					if WS is dagger specialty:
+						decide on 4;
 					decide on 3;
 	repeat with W running through things carried by P:
 		if W is a missile weapon (called MSW):
 			if the missile weapon type of MSW is not nil missile weapon:
 				let MWT be the missile weapon type of MSW;
 				let R be the range of MWT;
-				if D <= 3 * R: decide on 1;
+				if D <= 3 * R:
+					decide on 1;
 	decide on 5.
 
 [ Key = weapon priority * 1000 - skill%. Lower acts first. The 1000-gap ensures weapon type always dominates ]
@@ -708,14 +732,17 @@ To decide which number is the weapon priority of (P - a person):
 To decide which number is the combat sort key of (P - a person):
 	if P is the player:
 		let PW be the current round player weapon;
-		if PW is nothing: decide on 5000 - (the Brawl rating of P);
+		if PW is nothing:
+			decide on 5000 - (the Brawl rating of P);
 		if PW is a missile weapon (called MSW):
 			let WS be the weapon type specialty of MSW;
 			decide on 1000 - (the WS weapon specialty rating of P);
 		if PW is a melee weapon (called MW):
 			let WS be the weapon type specialty of MW;
-			if WS is polearm specialty or WS is spear specialty: decide on 2000 - (the WS weapon specialty rating of P);
-			if WS is dagger specialty: decide on 4000 - (the WS weapon specialty rating of P);
+			if WS is polearm specialty or WS is spear specialty:
+				decide on 2000 - (the WS weapon specialty rating of P);
+			if WS is dagger specialty:
+				decide on 4000 - (the WS weapon specialty rating of P);
 			decide on 3000 - (the WS weapon specialty rating of P);
 		decide on 5000;
 	let D be the combat distance between P and the player;
@@ -724,8 +751,10 @@ To decide which number is the combat sort key of (P - a person):
 			if W is a melee weapon (called MW):
 				if the melee weapon type of MW is not nil melee weapon:
 					let WS be the weapon type specialty of MW;
-					if WS is polearm specialty or WS is spear specialty: decide on 2000 - (the WS weapon specialty rating of P);
-					if WS is dagger specialty: decide on 4000 - (the WS weapon specialty rating of P);
+					if WS is polearm specialty or WS is spear specialty:
+						decide on 2000 - (the WS weapon specialty rating of P);
+					if WS is dagger specialty:
+						decide on 4000 - (the WS weapon specialty rating of P);
 					decide on 3000 - (the WS weapon specialty rating of P);
 	repeat with W running through things carried by P:
 		if W is a missile weapon (called MSW):
@@ -746,6 +775,53 @@ To sort the combat order by weapon priority:
 			now entry J of the list of combatants is entry (J - 1) of the list of combatants;
 			now J is J - 1;
 		now entry J of the list of combatants is C.
+
+To decide whether (defender - a person) attempts to defend against the attack by (attacker - a person)
+	with (W - an object):
+	if defender is the player:
+		if the defensive stance of the player is undefended stance:
+			decide no;
+		if the defensive stance of the player is dodge stance:
+			decide on whether or not the player successfully dodges the attack by the attacker;
+		[ Parry stance: try parry if eligible weapon/shield exists, else fall back to dodge ]
+		if the player has a parry option against W:
+			decide on whether or not the player successfully parries the attack by the attacker with W;
+		decide on whether or not the player successfully dodges the attack by the attacker;
+	[ NPC: choose by comparing best available defense rating ]
+	let dodge rating be the effective Dodge rating of the defender;
+	if W is a missile weapon:
+		if the missile parry chance of the defender >= dodge rating:
+			decide on whether or not the defender successfully parries the attack by the attacker with W;
+		otherwise:
+			decide on whether or not the defender successfully dodges the attack by the attacker;
+	otherwise:
+		let best parry rating be 0;
+		repeat with PW running through things carried by the defender:
+			if PW is a melee weapon:
+				if the melee weapon type of PW is not nil melee weapon:
+					let WS be the weapon type specialty of PW;
+					let rating be the WS weapon specialty rating of the defender;
+					if rating > best parry rating:
+						now best parry rating is rating;
+		if best parry rating >= dodge rating and best parry rating > 0:
+			decide on whether or not the defender successfully parries the attack by the attacker with W;
+		otherwise:
+			decide on whether or not the defender successfully dodges the attack by the attacker.
+
+To resolve the combat round:
+	sort the combat order by weapon priority;
+	repeat with I running from 1 to the number of entries in the list of combatants:
+		let C be entry I of the list of combatants;
+		if C is not conscious, next;
+		if C is the player:
+			execute an attack by the player against the noun with the current round player weapon;
+		otherwise:
+			follow the npc combat intent rules for C;
+			let T be the npc action target;
+			if T is nothing, next;
+			if T is a person (called P):
+				if P is not conscious, next;
+			execute an attack by C against T with the npc action weapon.
 
 Instead of attacking someone when using basic combat is true:
 	say "Specify a weapon: try 'attack [the noun] with [italic type]weapon[roman type]' or 'attack [the noun] unarmed'."
@@ -781,14 +857,74 @@ The attack report result is a result that varies.
 The attack report raw damage is a number that varies.
 
 Last for reporting an attack result:
-	if the attack report result is special:
-		say "You strike [the attack report target] with an exceptional blow! ";
-	otherwise if the attack report result is success:
-		say "You hit [the attack report target]. ";
-	otherwise if the attack report result is failure:
-		say "Your attack misses [the attack report target].";
+	let A be the attack report attacker;
+	if A is the player:
+		if the attack report result is special:
+			say "You strike [the attack report target] with an exceptional blow! ";
+		otherwise if the attack report result is success:
+			say "You hit [the attack report target]. ";
+		otherwise if the attack report result is failure:
+			say "Your attack misses [the attack report target].";
+		otherwise:
+			say "You fumble your attack!";
 	otherwise:
-		say "You fumble your attack!".
+		if the attack report result is special:
+			say "[The A] strikes [subject the attack report target] with an exceptional blow! ";
+		otherwise if the attack report result is success:
+			say "[The A] hits [subject the attack report target]. ";
+		otherwise if the attack report result is failure:
+			say "[The A] misses [subject the attack report target].";
+		otherwise:
+			say "[The A] fumbles [their] attack!".
+
+To execute an attack by (A - a person) against (T - a thing) with (W - an object):
+	let R be failure;
+	if W is a melee weapon (called MW):
+		let WS be the weapon type specialty of MW;
+		now R is the WS weapon specialty result for A;
+	otherwise if W is a missile weapon (called MSW):
+		let WS be the weapon type specialty of MSW;
+		now R is the WS weapon specialty result for A;
+	otherwise:
+		now R is the Brawl result for A;
+	now the attack report attacker is A;
+	now the attack report target is T;
+	now the attack report weapon is W;
+	now the attack report result is R;
+	if R is special or R is success:
+		let attack negated be false;
+		if T is a person (called the defender):
+			if the defender attempts to defend against the attack by A with W:
+				now attack negated is true;
+		if attack negated is false:
+			let damage be 0;
+			if W is nothing:
+				if R is special:
+					now damage is the special unarmed damage of A;
+				otherwise:
+					now damage is the unarmed damage of A;
+			otherwise if W is a melee weapon (called MT):
+				if R is special:
+					now damage is the special attack damage of MT by A;
+				otherwise:
+					now damage is the attack damage of MT by A;
+			otherwise if W is a missile weapon (called MS):
+				if R is special:
+					now damage is the special attack damage of MS by A;
+				otherwise:
+					now damage is the attack damage of MS by A;
+			now the attack report raw damage is damage;
+			carry out the reporting an attack result activity;
+			apply damage points of damage to T;
+	otherwise if R is failure:
+		now the attack report raw damage is 0;
+		carry out the reporting an attack result activity;
+	otherwise:
+		now the attack report raw damage is 0;
+		carry out the reporting an attack result activity;
+		now the fumble context weapon is W;
+		now the fumble context attacker is A;
+		follow the attacking fumble rules.
 
 Carry out attacking it with (this is the weapon attack rule):
 	if the player is not listed in the list of combatants:
@@ -796,35 +932,8 @@ Carry out attacking it with (this is the weapon attack rule):
 			add the target to the combat order;
 		add the player to the combat order;
 		enable combat mode;
-	let WS be nil specialty;
-	if the second noun is a melee weapon (called MW):
-		now WS is the weapon type specialty of MW;
-	otherwise if the second noun is a missile weapon (called MSW):
-		now WS is the weapon type specialty of MSW;
-	let R be the WS weapon specialty result for the player;
-	now the attack report attacker is the player;
-	now the attack report target is the noun;
-	now the attack report weapon is the second noun;
-	now the attack report result is R;
-	if R is special:
-		let SD be the special attack damage of the second noun by the player;
-		now the attack report raw damage is SD;
-		carry out the reporting an attack result activity;
-		apply SD points of damage to the noun;
-	otherwise if R is success:
-		let ND be the attack damage of the second noun by the player;
-		now the attack report raw damage is ND;
-		carry out the reporting an attack result activity;
-		apply ND points of damage to the noun;
-	otherwise if R is failure:
-		now the attack report raw damage is 0;
-		carry out the reporting an attack result activity;
-	otherwise:
-		now the attack report raw damage is 0;
-		carry out the reporting an attack result activity;
-		now the fumble context weapon is the second noun;
-		now the fumble context attacker is the player;
-		follow the attacking fumble rules.
+	now the current round player weapon is the second noun;
+	resolve the combat round.
 
 Unarmed attacking is an action applying to one visible thing.
 Understand "attack [someone] unarmed" as unarmed attacking.
@@ -835,30 +944,8 @@ Carry out unarmed attacking (this is the unarmed attack rule):
 			add the target to the combat order;
 		add the player to the combat order;
 		enable combat mode;
-	let R be the Brawl result for the player;
-	now the attack report attacker is the player;
-	now the attack report target is the noun;
-	now the attack report weapon is nothing;
-	now the attack report result is R;
-	if R is special:
-		let SD be the special unarmed damage of the player;
-		now the attack report raw damage is SD;
-		carry out the reporting an attack result activity;
-		apply SD points of damage to the noun;
-	otherwise if R is success:
-		let ND be the unarmed damage of the player;
-		now the attack report raw damage is ND;
-		carry out the reporting an attack result activity;
-		apply ND points of damage to the noun;
-	otherwise if R is failure:
-		now the attack report raw damage is 0;
-		carry out the reporting an attack result activity;
-	otherwise:
-		now the attack report raw damage is 0;
-		carry out the reporting an attack result activity;
-		now the fumble context weapon is nothing;
-		now the fumble context attacker is the player;
-		follow the attacking fumble rules.
+	now the current round player weapon is nothing;
+	resolve the combat round.
 
 [ Fumble hook: set fumble context weapon and fumble context attacker before the rules fire. ]
 The attacking fumble rules is a rulebook.
@@ -873,9 +960,94 @@ To decide which weapon specialty is the weapon type specialty of (W - a missile 
 	choose the row with a missile weapon type of (missile weapon type of W) in Table of Missile Weapon Types;
 	decide on the Specialty entry.
 
+To decide whether (defender - a person) has a parry option against (W - an object):
+	if W is a missile weapon:
+		decide on whether or not the missile parry chance of the defender > 0;
+	repeat with PW running through things carried by the defender:
+		if PW is a melee weapon:
+			if the melee weapon type of PW is not nil melee weapon:
+				decide yes;
+	decide no.
+
 Section 6 - Parrying
 
+Reporting a parry result is an activity.
+The parry report defender is a person that varies.
+The parry report attacker is a person that varies.
+The parry report result is a result that varies.
+
+Last for reporting a parry result:
+	if the parry report result is special or the parry report result is success:
+		if the parry report defender is the player:
+			say "You parry [the parry report attacker]'s attack!";
+		otherwise:
+			say "[The parry report defender] parries your attack!";
+	otherwise:
+		if the parry report defender is the player:
+			say "You fail to parry [the parry report attacker]'s attack!";
+		otherwise:
+			say "[The parry report defender] fails to parry your attack!".
+
+To decide whether (defender - a person) successfully parries the attack by (attacker - a person)
+	with (W - an object):
+	let R be failure;
+	if W is a missile weapon:
+		if the missile parry chance of the defender is 0:
+			decide no;
+		now R is a BRP roll of (the missile parry chance of the defender)
+			labeled "missile parry" for the defender - normal;
+	otherwise:
+		let best weapon be nothing;
+		let best rating be 0;
+		repeat with PW running through things carried by the defender:
+			if PW is a melee weapon:
+				if the melee weapon type of PW is not nil melee weapon:
+					let WS be the weapon type specialty of PW;
+					let rating be the WS weapon specialty rating of the defender;
+					if rating > best rating:
+						now best rating is rating;
+						now best weapon is PW;
+		if best weapon is nothing:
+			decide no;
+		if best weapon is a melee weapon (called MW):
+			let WS be the weapon type specialty of MW;
+			now R is the WS weapon specialty result for the defender;
+	now the parry report defender is the defender;
+	now the parry report attacker is the attacker;
+	now the parry report result is R;
+	carry out the reporting a parry result activity;
+	if R is success or R is special:
+		decide yes;
+	decide no.
+
 Section 7 - Dodging
+
+Reporting a dodge result is an activity.
+The dodge report defender is a person that varies.
+The dodge report attacker is a person that varies.
+The dodge report result is a result that varies.
+
+Last for reporting a dodge result:
+	if the dodge report result is special or the dodge report result is success:
+		if the dodge report defender is the player:
+			say "You dodge [the dodge report attacker]'s attack!";
+		otherwise:
+			say "[The dodge report defender] dodges your attack!";
+	otherwise:
+		if the dodge report defender is the player:
+			say "You fail to dodge [the dodge report attacker]'s attack!";
+		otherwise:
+			say "[The dodge report defender] fails to dodge your attack!".
+
+To decide whether (defender - a person) successfully dodges the attack by (attacker - a person):
+	let R be the Dodge result for the defender;
+	now the dodge report defender is the defender;
+	now the dodge report attacker is the attacker;
+	now the dodge report result is R;
+	carry out the reporting a dodge result activity;
+	if R is success or R is special:
+		decide yes;
+	decide no.
 
 Section 8 - Combat Summary
 
@@ -1080,7 +1252,9 @@ Last for reporting damage applied:
 	if T is a person (called P):
 		if the current hit points of P <= 0:
 			now P is dead;
-			say "[The P] is dead.";
+			say "[The P] [are] dead.";
+			if the player is dead:
+				end the story;
 		otherwise if the current hit points of P <= 2:
 			now p is unconscious;
 			say "[The P] falls unconscious."
@@ -1524,7 +1698,7 @@ Example: **** The Arena - Demonstrate basic combat
 	Archie the Archer is wearing a worn shortbow, an archer's leather tunic, and an archer's leather boots.
 	Marge the Mage is here. She is a woman.
 	A lumberjack axe is a melee weapon. The melee weapon type of a lumberjack axe is hand axe. A lumberjack axe is here.
-	
+
 Example: **** Train Station - Demonstrate use of skills and characteristic rolls in a demo scene.
 
 This tiny demo game demonstrates the supported features of the SRD.

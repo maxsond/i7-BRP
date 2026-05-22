@@ -1471,10 +1471,18 @@ To schedule natural healing for (P - a person):
 	now the patient entry is P;
 	now the due day entry is the current game day + 7.
 
+To decide whether (P - a person) is already scheduled for natural healing:
+	repeat through Table of Healing Queue:
+		if there is a patient entry and the patient entry is P:
+			decide yes;
+	decide no.
+
 After reporting damage applied:
 	if the damage report target is a person (called P):
-		if P is not dead and the current hit points of P < the maximum hit points of P:
-			schedule natural healing for P.
+		if P is not dead:
+			if the current hit points of P < the maximum hit points of P:
+				unless P is already scheduled for natural healing:
+					schedule natural healing for P.
 
 Every turn (this is the natural healing rule):
 	repeat through Table of Healing Queue:
@@ -1765,7 +1773,34 @@ Resistance rolls:
 Time tracking:
 	Turns by default take five minutes per SRD specification.
 	Actions can be given variable time requirements using Eric Eve's Variable Time Control which is imported by this extension.
-	
+
+Natural healing:
+	Any time a person takes damage that leaves them below their maximum hit points, natural healing is
+	automatically scheduled. One week of in-game time later, 1D3 hit points are restored (up to the
+	maximum). If the character is still not fully healed, another week is scheduled, and so on until
+	full HP is restored. Dead characters are removed from the healing schedule.
+
+	In-game day tracking is handled internally. One day elapses each time 1440 minutes of in-game time
+	accumulate (accounting for any per-action time overrides set via Variable Time Control). "One week"
+	is always exactly seven of those days, regardless of how many turns that takes.
+
+	Healing messages are produced by the `reporting natural healing` activity. Before it fires, three
+	variables are set:
+		`natural healing patient` - the person being healed
+		`natural healing amount` - hit points actually restored this tick (capped at the maximum;
+		                           in the full-recovery case this is the remainder to max, not the raw die roll)
+		`natural healing full recovery` - true if the patient reached full HP this tick
+
+	Override the default messages by adding a `for reporting natural healing` rule:
+		For reporting natural healing:
+			if natural healing full recovery is true:
+				say "[The natural healing patient] [are] back to full strength.";
+			otherwise:
+				say "[The natural healing patient] [look] a little better ([natural healing amount] HP).".
+
+	The default rule respects `BRP Verbosity`: if verbosity is false, no message is printed. Custom
+	rules have full control and are not bound by the verbosity setting.
+
 Dice:
 	(number): `the result of (die roll)`
 	(die roll) must be of the form XdY

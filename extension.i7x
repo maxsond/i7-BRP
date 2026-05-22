@@ -829,7 +829,11 @@ Instead of attacking someone when using basic combat is true:
 
 Section 3 - Movement
 
+[ This is enough of a headache to model in a universally useful way that I'll defer this to individual games]
+
 Section 4 - Actions
+
+[ TODO: performing actions while in combat still causes NPC to continue attacking you, and the action may not complete in one combat round ]
 
 Section 5 - Attacking
 
@@ -1051,6 +1055,8 @@ To decide whether (defender - a person) successfully dodges the attack by (attac
 
 Section 8 - Combat Summary
 
+[ See all the other sections in this chapter ]
+
 Section 9 - Weapons and Damage
 
 A weapon specialty is a kind of value. The weapon specialties are defined by the Table of Weapon Specialties.
@@ -1251,6 +1257,8 @@ Last for reporting damage applied:
 		say "[N] damage. ";
 	if T is a person (called P):
 		if the current hit points of P <= 0:
+		[ technically if a character can get their HP > 0 before the round ends they can survive ]
+		[ according to the BRP. But since we're crunching the round here, there isn't a way for that to happen ]
 			now P is dead;
 			say "[The P] [are] dead.";
 			if the player is dead:
@@ -1392,9 +1400,107 @@ To decide which number is the shield damage of (P - a person):
 
 Section 12 - Damage and Injury
 
+[ Already implemented above ]
+
 Section 13 - Special Successes
 
+[ Already implemented above ]
+
 Section 14 - Healing
+
+The current game day is a number that varies. The current game day is 1.
+[ sub-day minutes is a carry accumulator (0-1439) so it never overflows I7's number type ]
+The sub-day minutes is a number that varies. The sub-day minutes is 0.
+
+[ We read VTC's internal variables directly rather than inferring elapsed time from the
+  time-of-day clock. The clock is mod 1440, so any single-turn jump >= 24 hours would
+  wrap and lose whole days. VTC's variables give us the exact seconds before wrapping occurs.
+
+  This rule must fire before the variable advance time rule so VTC has not yet consumed
+  and reset its state for this turn. ]
+This is the track elapsed game time rule:
+	[ time-reset means the current action called "take no time"; VTC will skip advancing
+	  the clock entirely, so we also skip — zero minutes elapsed. ]
+	if time-reset is false:
+		let elapsed be 0;
+		[ seconds_used means the action called "take N seconds", which set `seconds` to
+		  carry + N. That is the full elapsed seconds for this turn. ]
+		if seconds_used is true:
+			now elapsed is seconds / 60;
+		[ Otherwise it is a normal turn. `seconds` still holds last turn's sub-minute carry
+		  (VTC sets previous_seconds = seconds at end of each turn and has not yet run this
+		  turn), so the total seconds this turn is carry + seconds_per_turn. ]
+		otherwise:
+			now elapsed is (seconds + seconds_per_turn) / 60;
+		increase the sub-day minutes by elapsed;
+		[ Loop rather than `if` so a single action spanning multiple days increments the
+		  counter correctly for each full 1440-minute day it contains. ]
+		while the sub-day minutes >= 1440:
+			increment the current game day;
+			decrease the sub-day minutes by 1440.
+
+The track elapsed game time rule is listed before the variable advance time rule in the turn sequence rules.
+
+Reporting natural healing is an activity.
+The natural healing patient is a person that varies.
+The natural healing amount is a number that varies.
+The natural healing full recovery is a truth state that varies.
+
+For reporting natural healing (this is the default natural healing report rule):
+	if BRP Verbosity is true:
+		if natural healing full recovery is true:
+			if the natural healing patient is the player:
+				say "You have fully recovered.";
+			otherwise:
+				say "[The natural healing patient] has fully recovered.";
+		otherwise:
+			if the natural healing patient is the player:
+				say "You recover [natural healing amount] hit point[s] naturally.";
+			otherwise:
+				say "[The natural healing patient] recovers [natural healing amount] hit point[s] naturally.".
+
+Table of Healing Queue
+patient (a person)	due day (a number)
+with 10 blank rows
+
+To schedule natural healing for (P - a person):
+	repeat through Table of Healing Queue:
+		if there is a patient entry and the patient entry is P:
+			stop;
+	choose a blank row in Table of Healing Queue;
+	now the patient entry is P;
+	now the due day entry is the current game day + 7.
+
+After reporting damage applied:
+	if the damage report target is a person (called P):
+		if P is not dead and the current hit points of P < the maximum hit points of P:
+			schedule natural healing for P.
+
+Every turn (this is the natural healing rule):
+	repeat through Table of Healing Queue:
+		if there is a patient entry:
+			let P be the patient entry;
+			if P is dead:
+				blank out the whole row;
+			otherwise if the current hit points of P >= the maximum hit points of P:
+				blank out the whole row;
+			otherwise if the due day entry <= the current game day:
+				let healed be the result of 1d3;
+				let new HP be the current hit points of P + healed;
+				if new HP >= the maximum hit points of P:
+					now the natural healing patient is P;
+					now the natural healing amount is the maximum hit points of P - the current hit points of P;
+					now the natural healing full recovery is true;
+					now the current hit points of P is the maximum hit points of P;
+					carry out the reporting natural healing activity;
+					blank out the whole row;
+				otherwise:
+					now the natural healing patient is P;
+					now the natural healing amount is healed;
+					now the natural healing full recovery is false;
+					now the current hit points of P is new HP;
+					carry out the reporting natural healing activity;
+					now the due day entry is the current game day + 7.
 
 Chapter 6 - Spot Rules
 
